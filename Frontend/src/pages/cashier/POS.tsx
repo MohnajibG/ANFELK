@@ -50,7 +50,7 @@ const POS = () => {
           <p className="text-xs uppercase tracking-[0.4em] text-(--champagne)">
             Caisse
           </p>
-          <h1 className="mt-3 font-title text-3xl font-bold">ANFAL K POS</h1>
+          <h1 className="mt-3 font-title text-3xl font-bold">ANFEL K POS</h1>
           <p className="mt-2 text-sm text-(--muted)">
             Création d'un nouveau ticket
           </p>
@@ -99,6 +99,7 @@ const POS = () => {
 
           <ServiceSelector
             services={pos.filteredServices}
+            employees={pos.employees}
             search={pos.searchService}
             setSearch={pos.setSearchService}
             addService={pos.addService}
@@ -115,9 +116,7 @@ const POS = () => {
         <div className="lg:w-[calc(33.333%-16px)]">
           <TicketCart
             cart={pos.cart}
-            employees={pos.employees}
             removeItem={pos.removeItem}
-            updateEmployee={pos.updateEmployee}
             updatePrice={pos.updatePrice}
           />
 

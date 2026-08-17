@@ -44,7 +44,7 @@ app.use("/api/expenses", expenseRoutes);
 app.get("/", (_, res) => {
   res.json({
     success: true,
-    message: "ANFAL K API Running",
+    message: "ANFEL K API Running",
   });
 });
 

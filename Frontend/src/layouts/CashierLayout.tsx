@@ -17,7 +17,11 @@ import {
 } from "lucide-react";
 
 const links = [
-  { label: "Tableau de bord", icon: LayoutDashboard, path: "/cashier/dashboard" },
+  {
+    label: "Tableau de bord",
+    icon: LayoutDashboard,
+    path: "/cashier/dashboard",
+  },
   { label: "Point de vente", icon: ShoppingCart, path: "/cashier/pos" },
   { label: "Clients", icon: Users, path: "/cashier/customers" },
   { label: "Rendez-vous", icon: CalendarDays, path: "/cashier/appointments" },
@@ -48,7 +52,7 @@ const CashierLayout = () => {
       <header className="fixed left-0 top-0 z-40 flex h-16 w-full items-center justify-between border-b border-(--role-shell-border) bg-(--role-shell-bg) px-5 md:hidden">
         <div>
           <h1 className="font-title text-xl tracking-widest text-(--role-shell-text)">
-            ANFAL K
+            ANFEL K
           </h1>
           <p className="text-[10px] tracking-[0.4em] text-(--role-shell-accent)">
             INSTITUTE
@@ -184,7 +188,7 @@ const CashierLayout = () => {
       >
         <div className="relative border-b border-(--role-shell-border) p-6">
           <h1 className="font-title text-2xl tracking-widest text-(--role-shell-text)">
-            {collapsed ? "AK" : "ANFAL K"}
+            {collapsed ? "AK" : "ANFEL K"}
           </h1>
 
           {!collapsed && (

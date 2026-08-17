@@ -3,9 +3,11 @@ import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import { motion } from "framer-motion";
 
 import type { Service } from "../../types/service";
+import type { Employee } from "../../types/employee";
 
 type Props = {
   services: Service[];
+  employees: Employee[];
   search: string;
   setSearch: (value: string) => void;
   addService: (service: Service) => void;
@@ -13,6 +15,7 @@ type Props = {
 
 const ServiceSelector = ({
   services,
+  employees,
   search,
   setSearch,
   addService,
@@ -31,6 +34,9 @@ const ServiceSelector = ({
 
     return Array.from(groups.entries());
   }, [services]);
+
+  const hasEligibleEmployee = (service: Service) =>
+    employees.some((employee) => employee.speciality === service.speciality);
 
   return (
     <section className="rounded-3xl border border-(--border) bg-white p-5">
@@ -65,32 +71,47 @@ const ServiceSelector = ({
               </h3>
 
               <div className="flex flex-wrap gap-3">
-                {groupServices.map((service) => (
-                  <motion.button
-                    key={service._id}
-                    type="button"
-                    whileHover={{ y: -3 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => addService(service)}
-                    className="w-full rounded-xl border border-(--border) p-3 text-left transition hover:border-(--black) hover:bg-(--cream) sm:w-[calc(50%-6px)] lg:w-[calc(33.333%-8px)]"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold">
-                          {service.name}
-                        </p>
+                {groupServices.map((service) => {
+                  const disabled = !hasEligibleEmployee(service);
 
-                        <p className="text-xs text-(--muted)">
-                          {service.duration} min
-                        </p>
+                  return (
+                    <motion.button
+                      key={service._id}
+                      type="button"
+                      disabled={disabled}
+                      whileHover={disabled ? undefined : { y: -3 }}
+                      whileTap={disabled ? undefined : { scale: 0.97 }}
+                      onClick={() => !disabled && addService(service)}
+                      className={`w-full rounded-xl border p-3 text-left transition sm:w-[calc(50%-6px)] lg:w-[calc(33.333%-8px)] ${
+                        disabled
+                          ? "cursor-not-allowed border-(--border) bg-stone-100 opacity-60"
+                          : "border-(--border) hover:border-(--black) hover:bg-(--cream)"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">
+                            {service.name}
+                          </p>
+
+                          <p className="text-xs text-(--muted)">
+                            {service.duration} min
+                          </p>
+
+                          {disabled && (
+                            <p className="mt-1 text-xs text-red-600">
+                              Aucun employé actif disponible
+                            </p>
+                          )}
+                        </div>
+
+                        <strong className="shrink-0 text-sm">
+                          {service.price} DA
+                        </strong>
                       </div>
-
-                      <strong className="shrink-0 text-sm">
-                        {service.price} DA
-                      </strong>
-                    </div>
-                  </motion.button>
-                ))}
+                    </motion.button>
+                  );
+                })}
               </div>
             </div>
           ))}

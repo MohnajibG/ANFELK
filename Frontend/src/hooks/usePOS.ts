@@ -100,11 +100,12 @@ const usePOS = (options?: UsePOSOptions) => {
   );
 
   const addService = (service: Service) => {
+    // L'employé dédié est assigné automatiquement (spécialité du
+    // service) : plus besoin de le choisir ni de l'afficher côté POS.
     const matchingEmployees = employees.filter(
       (employee) => employee.speciality === service.speciality,
     );
-    const autoEmployee =
-      matchingEmployees.length === 1 ? matchingEmployees[0] : null;
+    const autoEmployee = matchingEmployees[0] ?? null;
 
     setCart((prev) => [
       ...prev,
@@ -120,19 +121,6 @@ const usePOS = (options?: UsePOSOptions) => {
 
   const removeItem = (index: number) => {
     setCart((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const updateEmployee = (index: number, employee: Employee) => {
-    setCart((prev) =>
-      prev.map((item, i) =>
-        i === index
-          ? {
-              ...item,
-              employee,
-            }
-          : item,
-      ),
-    );
   };
 
   const updatePrice = (index: number, price: number) => {
@@ -283,7 +271,6 @@ const usePOS = (options?: UsePOSOptions) => {
 
     addService,
     removeItem,
-    updateEmployee,
     updatePrice,
 
     selectAppointment,

@@ -57,7 +57,7 @@ const AdminLayout = () => {
       <header className="fixed left-0 top-0 z-40 flex h-16 w-full items-center justify-between border-b border-(--border) bg-white px-5 md:hidden">
         <div>
           <h1 className="font-title text-xl tracking-widest text-(--black)">
-            ANFAL K
+            ANFEL K
           </h1>
           <p className="text-[10px] tracking-[0.4em] text-(--champagne)">
             INSTITUTE
@@ -196,7 +196,7 @@ const AdminLayout = () => {
       >
         <div className="relative border-b border-(--border) p-6">
           <h1 className="font-title text-2xl tracking-widest">
-            {collapsed ? "AK" : "ANFAL K"}
+            {collapsed ? "AK" : "ANFEL K"}
           </h1>
 
           {!collapsed && (
