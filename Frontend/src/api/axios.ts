@@ -36,7 +36,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Gestion expiration token
+// Gestion expiration token / changement de mot de passe obligatoire
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -45,6 +45,14 @@ api.interceptors.response.use(
       localStorage.removeItem("user");
 
       window.location.href = "/app";
+    }
+
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.code === "PASSWORD_CHANGE_REQUIRED" &&
+      window.location.pathname !== "/change-password"
+    ) {
+      window.location.href = "/change-password";
     }
 
     return Promise.reject(error);

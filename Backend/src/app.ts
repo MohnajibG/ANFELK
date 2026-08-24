@@ -1,5 +1,10 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+
+import { env } from "./config/env";
+import { apiLimiter } from "./middlewares/rateLimit";
+import { notFoundHandler, errorHandler } from "./middlewares/error";
 
 import authRoutes from "./routes/auth.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
@@ -18,11 +23,29 @@ const app = express();
 
 /* Middlewares */
 
-app.use(cors());
+app.use(helmet());
+
+const corsOptions: cors.CorsOptions = {
+  origin:
+    env.ALLOWED_ORIGINS.length > 0
+      ? (origin, callback) => {
+          // Requêtes sans Origin (curl, apps mobiles, health checks) autorisées.
+          if (!origin || env.ALLOWED_ORIGINS.includes(origin)) {
+            return callback(null, true);
+          }
+
+          return callback(new Error("Origin non autorisée par CORS"));
+        }
+      : true,
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/api", apiLimiter);
 
 /* Routes */
 
@@ -47,5 +70,8 @@ app.get("/", (_, res) => {
     message: "ANFEL K API Running",
   });
 });
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;

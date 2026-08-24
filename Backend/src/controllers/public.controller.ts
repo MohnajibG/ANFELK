@@ -6,6 +6,7 @@ import {
   getAvailability,
   createOnlineAppointment,
 } from "../services/public.service";
+import { sendInternalError } from "../utils/apiError";
 
 /**
  * Services disponibles publiquement
@@ -22,12 +23,8 @@ export const getPublicServicesController = async (
 
       services,
     });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-
-      message: error.message,
-    });
+  } catch (error) {
+    sendInternalError(res, error, "GET_PUBLIC_SERVICES_ERROR");
   }
 };
 
@@ -46,12 +43,8 @@ export const getPublicEmployeesController = async (
 
       employees,
     });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-
-      message: error.message,
-    });
+  } catch (error) {
+    sendInternalError(res, error, "GET_PUBLIC_EMPLOYEES_ERROR");
   }
 };
 
@@ -84,12 +77,8 @@ export const getAvailabilityController = async (
 
       availability,
     });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-
-      message: error.message,
-    });
+  } catch (error) {
+    sendInternalError(res, error, "GET_AVAILABILITY_ERROR");
   }
 };
 

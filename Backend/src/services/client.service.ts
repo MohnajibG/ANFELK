@@ -1,4 +1,5 @@
 import Client from "../models/Client";
+import { escapeRegex } from "../utils/security";
 
 /**
  * Créer un client
@@ -82,28 +83,30 @@ export const getClients = async (filters: {
   }
 
   if (filters.search) {
+    const safeSearch = escapeRegex(filters.search);
+
     query.$or = [
       {
         firstName: {
-          $regex: filters.search,
+          $regex: safeSearch,
           $options: "i",
         },
       },
       {
         lastName: {
-          $regex: filters.search,
+          $regex: safeSearch,
           $options: "i",
         },
       },
       {
         phone: {
-          $regex: filters.search,
+          $regex: safeSearch,
           $options: "i",
         },
       },
       {
         email: {
-          $regex: filters.search,
+          $regex: safeSearch,
           $options: "i",
         },
       },

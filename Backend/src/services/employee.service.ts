@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 import User, { UserRole, Speciality } from "../models/User";
 import { hashPassword } from "../utils/hash";
+import { generateTemporaryPassword, escapeRegex } from "../utils/security";
 
 interface CreateEmployeeData {
   firstName: string;
@@ -34,9 +35,6 @@ const allowedSpecialities = [
 
 const validateEmail = (email: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-const generateTemporaryPassword = () =>
-  Math.random().toString(36).slice(-8) + "!";
 
 const validateEmployeeRole = (role: string) => {
   if (!allowedRoles.includes(role as any)) {
@@ -123,16 +121,18 @@ export const getEmployees = async (filters?: {
   const search = filters?.search;
 
   if (search) {
+    const safeSearch = escapeRegex(search);
+
     query.$or = [
       {
         firstName: {
-          $regex: search,
+          $regex: safeSearch,
           $options: "i",
         },
       },
       {
         lastName: {
-          $regex: search,
+          $regex: safeSearch,
           $options: "i",
         },
       },
@@ -190,11 +190,16 @@ export const updateEmployee = async (id: string, data: UpdateEmployeeData) => {
   validateEmployeeRole(role);
   validateSpeciality(role, speciality);
 
-  Object.assign(employee, {
-    ...data,
-    role,
-    speciality: role === "employee" ? speciality : undefined,
-  });
+  // Assignation explicite (liste blanche) : ne jamais faire
+  // Object.assign(employee, data) avec un body client non validé, cela
+  // permettrait d'écraser des champs sensibles (password, isActive,
+  // mustChangePassword, email...).
+  if (data.firstName !== undefined) employee.firstName = data.firstName.trim();
+  if (data.lastName !== undefined) employee.lastName = data.lastName.trim();
+  if (data.phone !== undefined) employee.phone = data.phone.trim();
+
+  employee.role = role;
+  employee.speciality = role === "employee" ? speciality : undefined;
 
   await employee.save();
 

@@ -1,6 +1,7 @@
 import { Response } from "express";
 
 import { AuthRequest } from "../types/auth";
+import { sendInternalError } from "../utils/apiError";
 
 import {
   createRecurringAppointment,
@@ -53,8 +54,8 @@ export const getRecurrenceOccurrencesController = async (
     );
 
     return res.json({ success: true, appointments });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return sendInternalError(res, error, "GET_RECURRENCE_OCCURRENCES_ERROR");
   }
 };
 

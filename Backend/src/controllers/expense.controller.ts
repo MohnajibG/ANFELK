@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../types/auth";
+import { sendInternalError } from "../utils/apiError";
 
 import {
   createExpense,
@@ -46,11 +47,8 @@ export const getExpensesController = async (
       success: true,
       expenses,
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    return sendInternalError(res, error, "GET_EXPENSES_ERROR");
   }
 };
 

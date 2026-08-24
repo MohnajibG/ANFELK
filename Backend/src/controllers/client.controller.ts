@@ -1,6 +1,7 @@
 import { Response } from "express";
 
 import { AuthRequest } from "../types/auth";
+import { sendInternalError } from "../utils/apiError";
 
 import {
   createClient,
@@ -58,11 +59,8 @@ export const getClientsController = async (req: AuthRequest, res: Response) => {
       success: true,
       ...result,
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    return sendInternalError(res, error, "GET_CLIENTS_ERROR");
   }
 };
 

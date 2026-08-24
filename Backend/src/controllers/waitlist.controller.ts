@@ -1,6 +1,7 @@
 import { Response } from "express";
 
 import { AuthRequest } from "../types/auth";
+import { sendInternalError } from "../utils/apiError";
 
 import {
   createWaitlistEntry,
@@ -52,7 +53,7 @@ export const getWaitlistController = async (req: AuthRequest, res: Response) => 
 
     return res.json({ success: true, entries });
   } catch (error: unknown) {
-    return res.status(500).json({ success: false, message: getErrorMessage(error) });
+    return sendInternalError(res, error, "GET_WAITLIST_ERROR");
   }
 };
 
@@ -83,7 +84,7 @@ export const getWaitlistMatchesController = async (
 
     return res.json({ success: true, matches });
   } catch (error: unknown) {
-    return res.status(500).json({ success: false, message: getErrorMessage(error) });
+    return sendInternalError(res, error, "GET_WAITLIST_MATCHES_ERROR");
   }
 };
 

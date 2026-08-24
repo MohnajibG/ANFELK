@@ -7,6 +7,7 @@ import {
   getCashierDashboard,
   getEmployeeDashboard,
 } from "../services/dashboard.service";
+import { sendInternalError } from "../utils/apiError";
 
 /**
  * Dashboard selon le rôle utilisateur
@@ -63,9 +64,6 @@ export const getDashboardController = async (
       dashboard,
     });
   } catch (error: unknown) {
-    return res.status(500).json({
-      success: false,
-      message: error instanceof Error ? error.message : "Erreur serveur",
-    });
+    return sendInternalError(res, error, "GET_DASHBOARD_ERROR");
   }
 };

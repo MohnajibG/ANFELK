@@ -6,8 +6,11 @@ import {
   getAvailabilityController,
   createOnlineAppointmentController,
 } from "../controllers/public.controller";
+import { publicLimiter } from "../middlewares/rateLimit";
 
 const router = Router();
+
+router.use(publicLimiter);
 
 /*
 ==================================

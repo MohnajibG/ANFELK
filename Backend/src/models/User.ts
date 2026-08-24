@@ -29,6 +29,9 @@ export interface IUser extends Document {
   isActive: boolean;
   mustChangePassword: boolean;
 
+  failedLoginAttempts: number;
+  lockUntil?: Date;
+
   createdBy?: Types.ObjectId;
 
   createdAt: Date;
@@ -112,6 +115,16 @@ const userSchema = new Schema<IUser>(
     mustChangePassword: {
       type: Boolean,
       default: true,
+    },
+
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+    },
+
+    lockUntil: {
+      type: Date,
+      default: undefined,
     },
 
     createdBy: {

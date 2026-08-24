@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../types/auth";
+import { sendInternalError } from "../utils/apiError";
 
 import {
   createTicket,
@@ -40,11 +41,8 @@ export const getTicketsController = async (req: AuthRequest, res: Response) => {
       success: true,
       tickets,
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    return sendInternalError(res, error, "GET_TICKETS_ERROR");
   }
 };
 
@@ -66,11 +64,8 @@ export const getTicketByIdController = async (
       success: true,
       ticket,
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    return sendInternalError(res, error, "GET_TICKET_BY_ID_ERROR");
   }
 };
 

@@ -1,5 +1,6 @@
 import Service, { ServiceSpeciality } from "../models/Service";
 import Category from "../models/Category";
+import { escapeRegex } from "../utils/security";
 
 const SPECIALITIES: ServiceSpeciality[] = [
   "Hair",
@@ -97,7 +98,7 @@ export const getServices = async (filters?: {
 
   if (filters?.search) {
     query.name = {
-      $regex: filters.search,
+      $regex: escapeRegex(filters.search),
       $options: "i",
     };
   }

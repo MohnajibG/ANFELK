@@ -11,6 +11,7 @@ import {
   updateEmployeeStatus,
   deleteEmployee,
 } from "../services/employee.service";
+import { sendInternalError } from "../utils/apiError";
 
 const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) {
@@ -94,13 +95,7 @@ export const getEmployeesController = async (
       employees,
     });
   } catch (error: unknown) {
-    console.error(error);
-
-    return res.status(500).json({
-      success: false,
-
-      message: getErrorMessage(error),
-    });
+    return sendInternalError(res, error, "GET_EMPLOYEES_ERROR");
   }
 };
 

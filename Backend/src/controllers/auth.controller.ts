@@ -10,6 +10,9 @@ import { generateToken } from "../utils/jwt";
 
 import type { AuthRequest } from "../types/auth";
 
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCK_DURATION_MS = 15 * 60 * 1000;
+
 const formatUser = (user: any) => ({
   _id: user._id.toString(),
 
@@ -59,9 +62,26 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
+    if (user.lockUntil && user.lockUntil.getTime() > Date.now()) {
+      return res.status(423).json({
+        success: false,
+        message:
+          "Compte temporairement verrouillé suite à plusieurs échecs de connexion. Réessayez plus tard.",
+      });
+    }
+
     const validPassword = await comparePassword(password, user.password);
 
     if (!validPassword) {
+      user.failedLoginAttempts = (user.failedLoginAttempts ?? 0) + 1;
+
+      if (user.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
+        user.lockUntil = new Date(Date.now() + LOCK_DURATION_MS);
+        user.failedLoginAttempts = 0;
+      }
+
+      await user.save();
+
       return res.status(401).json({
         success: false,
         message: "Email ou mot de passe incorrect",
@@ -73,6 +93,8 @@ export const login = async (req: Request, res: Response) => {
       role: user.role,
     });
 
+    user.failedLoginAttempts = 0;
+    user.lockUntil = undefined;
     user.lastLogin = new Date();
     await user.save();
 
@@ -99,6 +121,13 @@ export const login = async (req: Request, res: Response) => {
 export const changePassword = async (req: AuthRequest, res: Response) => {
   try {
     const { currentPassword, newPassword } = req.body;
+
+    if (typeof newPassword !== "string" || newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Le nouveau mot de passe doit contenir au moins 8 caractères",
+      });
+    }
 
     const user = await User.findById(req.user?.id).select("+password");
 

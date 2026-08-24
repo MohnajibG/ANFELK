@@ -38,6 +38,17 @@ export const authenticate = async (
       });
     }
 
+    // Un compte doit changer son mot de passe avant d'accéder au reste de
+    // l'API. Les routes /api/auth/* restent accessibles (me, change-password)
+    // pour permettre ce changement.
+    if (user.mustChangePassword && !req.originalUrl.startsWith("/api/auth/")) {
+      return res.status(403).json({
+        success: false,
+        code: "PASSWORD_CHANGE_REQUIRED",
+        message: "Vous devez changer votre mot de passe avant de continuer",
+      });
+    }
+
     req.user = {
       id: user._id.toString(),
       role: user.role,

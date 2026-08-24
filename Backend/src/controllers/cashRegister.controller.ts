@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../types/auth";
+import { sendInternalError } from "../utils/apiError";
 
 import {
   openCashRegister,
@@ -51,8 +52,8 @@ export const getCurrentCashRegisterController = async (
   try {
     const register = await getCurrentCashRegister(req.user!.id);
     return res.json({ success: true, register });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return sendInternalError(res, error, "GET_CURRENT_CASH_REGISTER_ERROR");
   }
 };
 
@@ -83,8 +84,8 @@ export const getCashRegisterHistoryController = async (
     });
 
     return res.json({ success: true, history });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return sendInternalError(res, error, "GET_CASH_REGISTER_HISTORY_ERROR");
   }
 };
 

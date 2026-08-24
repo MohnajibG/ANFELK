@@ -19,6 +19,7 @@ import {
 
 import { AppointmentStatus } from "../models/Appointment";
 import Appointment from "../models/Appointment";
+import { sendInternalError } from "../utils/apiError";
 
 /**
  * Création
@@ -70,11 +71,8 @@ export const getAppointmentsController = async (
       success: true,
       appointments,
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    return sendInternalError(res, error, "GET_APPOINTMENTS_ERROR");
   }
 };
 
@@ -99,11 +97,8 @@ export const getAppointmentByIdController = async (
       success: true,
       appointment,
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    return sendInternalError(res, error, "GET_APPOINTMENT_BY_ID_ERROR");
   }
 };
 
@@ -285,11 +280,8 @@ export const getWaitingPaymentAppointmentsController = async (
       success: true,
       appointments,
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  } catch (error) {
+    return sendInternalError(res, error, "GET_WAITING_PAYMENT_APPOINTMENTS_ERROR");
   }
 };
 
@@ -352,7 +344,7 @@ export const getTodayAppointmentsController = async (
   try {
     const appointments = await getTodayAppointments();
     return res.json({ success: true, appointments });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+  } catch (error) {
+    return sendInternalError(res, error, "GET_TODAY_APPOINTMENTS_ERROR");
   }
 };
