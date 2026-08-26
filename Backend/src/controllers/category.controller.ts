@@ -144,13 +144,6 @@ export const updateCategoryStatusController = async (
       });
     }
 
-    if (typeof isActive !== "boolean") {
-      return res.status(400).json({
-        success: false,
-        message: "isActive must be boolean",
-      });
-    }
-
     const category = await updateCategoryStatus(
       req.params.id as string,
       isActive,

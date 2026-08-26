@@ -7,6 +7,8 @@ import {
   createOnlineAppointmentController,
 } from "../controllers/public.controller";
 import { publicLimiter } from "../middlewares/rateLimit";
+import { validateBody } from "../middlewares/validate";
+import { createOnlineAppointmentSchema } from "../validators/public.validator";
 
 const router = Router();
 
@@ -57,6 +59,7 @@ Réservation online
 router.post(
   "/appointments",
 
+  validateBody(createOnlineAppointmentSchema),
   createOnlineAppointmentController,
 );
 

@@ -2,6 +2,9 @@ import { NextFunction, Response } from "express";
 import User from "../models/User";
 import { verifyToken } from "../utils/jwt";
 import { AuthRequest } from "../types/auth";
+import { AUTH_COOKIE_NAME } from "../utils/cookies";
+
+const SAFE_METHODS = ["GET", "HEAD", "OPTIONS"];
 
 export const authenticate = async (
   req: AuthRequest,
@@ -9,16 +12,14 @@ export const authenticate = async (
   next: NextFunction,
 ) => {
   try {
-    const authHeader = req.headers.authorization;
+    const token = req.cookies?.[AUTH_COOKIE_NAME];
 
-    if (!authHeader?.startsWith("Bearer ")) {
+    if (!token) {
       return res.status(401).json({
         success: false,
         message: "Token manquant",
       });
     }
-
-    const token = authHeader.split(" ")[1];
 
     const payload = verifyToken(token);
 
@@ -49,9 +50,22 @@ export const authenticate = async (
       });
     }
 
+    // Protection CSRF : le cookie d'authentification part automatiquement
+    // avec toute requête cross-site, un site tiers pourrait donc déclencher
+    // des actions à l'insu de l'utilisateur. Le front doit renvoyer le
+    // jeton csrf (reçu au login/me dans le corps JSON, jamais en cookie)
+    // dans le header X-CSRF-Token pour toute requête qui modifie l'état.
+    if (!SAFE_METHODS.includes(req.method) && req.headers["x-csrf-token"] !== payload.csrf) {
+      return res.status(403).json({
+        success: false,
+        message: "Session invalide (CSRF)",
+      });
+    }
+
     req.user = {
       id: user._id.toString(),
       role: user.role,
+      csrf: payload.csrf,
     };
 
     next();

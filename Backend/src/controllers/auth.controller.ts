@@ -1,5 +1,7 @@
 // src/controllers/auth.controller.ts
 
+import crypto from "crypto";
+
 import type { Request, Response } from "express";
 
 import User from "../models/User";
@@ -7,6 +9,12 @@ import User from "../models/User";
 import { comparePassword, hashPassword } from "../utils/hash";
 
 import { generateToken } from "../utils/jwt";
+
+import {
+  AUTH_COOKIE_NAME,
+  getAuthCookieOptions,
+  getClearCookieOptions,
+} from "../utils/cookies";
 
 import type { AuthRequest } from "../types/auth";
 
@@ -88,9 +96,12 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
+    const csrf = crypto.randomBytes(24).toString("hex");
+
     const token = generateToken({
       id: user._id.toString(),
       role: user.role,
+      csrf,
     });
 
     user.failedLoginAttempts = 0;
@@ -98,10 +109,12 @@ export const login = async (req: Request, res: Response) => {
     user.lastLogin = new Date();
     await user.save();
 
+    res.cookie(AUTH_COOKIE_NAME, token, getAuthCookieOptions());
+
     return res.status(200).json({
       success: true,
 
-      token,
+      csrf,
 
       user: formatUser(user),
     });
@@ -121,13 +134,6 @@ export const login = async (req: Request, res: Response) => {
 export const changePassword = async (req: AuthRequest, res: Response) => {
   try {
     const { currentPassword, newPassword } = req.body;
-
-    if (typeof newPassword !== "string" || newPassword.length < 8) {
-      return res.status(400).json({
-        success: false,
-        message: "Le nouveau mot de passe doit contenir au moins 8 caractères",
-      });
-    }
 
     const user = await User.findById(req.user?.id).select("+password");
 
@@ -184,6 +190,8 @@ export const me = async (req: AuthRequest, res: Response) => {
     return res.status(200).json({
       success: true,
 
+      csrf: req.user?.csrf,
+
       user: formatUser(user),
     });
   } catch (error) {
@@ -194,4 +202,17 @@ export const me = async (req: AuthRequest, res: Response) => {
       message: "Internal server error",
     });
   }
+};
+
+/**
+ * Déconnexion : efface le cookie httpOnly côté navigateur.
+ * Le JS front ne peut pas le lire ni le supprimer lui-même.
+ */
+export const logout = (_req: Request, res: Response) => {
+  res.clearCookie(AUTH_COOKIE_NAME, getClearCookieOptions());
+
+  return res.status(200).json({
+    success: true,
+    message: "Déconnecté",
+  });
 };

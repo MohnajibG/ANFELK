@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { authService } from "../services/auth.service";
+import { setCsrfToken } from "../api/axios";
 
 import { AuthContext, type AuthContextType } from "./Auth.context";
 
@@ -19,21 +20,14 @@ export const AuthProvider = ({ children }: Props) => {
 
   const refreshUser = async () => {
     try {
-      const token = authService.getToken();
-
-      if (!token) {
-        setUser(null);
-
-        return;
-      }
-
+      // Le token vit dans un cookie httpOnly : impossible de savoir côté
+      // JS s'il existe. On tente systématiquement /me et on laisse le
+      // serveur trancher (401 = pas de session valide).
       const currentUser = await authService.me();
 
       setUser(currentUser);
-    } catch (error) {
-      console.error("Erreur récupération utilisateur", error);
-
-      await authService.logout();
+    } catch {
+      setCsrfToken(null);
 
       setUser(null);
     } finally {
@@ -53,6 +47,8 @@ export const AuthProvider = ({ children }: Props) => {
     const loggedUser = await authService.login(data);
 
     setUser(loggedUser);
+
+    return loggedUser;
   };
 
   const logout = async () => {

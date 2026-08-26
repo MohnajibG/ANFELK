@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 
 import { env } from "./config/env";
 import { apiLimiter } from "./middlewares/rateLimit";
@@ -37,9 +38,14 @@ const corsOptions: cors.CorsOptions = {
           return callback(new Error("Origin non autorisée par CORS"));
         }
       : true,
+  // Le cookie d'authentification httpOnly doit être envoyé/reçu cross-site
+  // (front Vercel / back Northflank) : indispensable avec credentials.
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
+
+app.use(cookieParser());
 
 app.use(express.json());
 

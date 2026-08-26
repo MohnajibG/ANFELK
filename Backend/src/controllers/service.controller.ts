@@ -150,13 +150,6 @@ export const updateServiceStatusController = async (
 
     const { isActive } = req.body;
 
-    if (typeof isActive !== "boolean") {
-      return res.status(400).json({
-        success: false,
-        message: "isActive must be boolean",
-      });
-    }
-
     const service = await updateServiceStatus(
       req.params.id as string,
       isActive,

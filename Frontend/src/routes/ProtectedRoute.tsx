@@ -1,17 +1,19 @@
 import { Navigate } from "react-router-dom";
 
+import { useAuth } from "../hooks/useAuth";
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const token = localStorage.getItem("token");
-  const user = localStorage.getItem("user");
+  const { user, loading } = useAuth();
 
-  if (!token || !user) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  if (loading) {
+    return null;
+  }
 
+  if (!user) {
     return <Navigate to="/app" replace />;
   }
 

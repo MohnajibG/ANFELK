@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { useAuth } from "../hooks/useAuth";
+
 const links = [
   {
     label: "Tableau de bord",
@@ -51,8 +53,10 @@ const EmployeeLayout = () => {
     location.pathname.includes("statistics"),
   );
 
-  const logout = () => {
-    localStorage.removeItem("token");
+  const { logout: authLogout } = useAuth();
+
+  const logout = async () => {
+    await authLogout();
     navigate("/app");
   };
 

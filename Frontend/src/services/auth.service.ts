@@ -1,22 +1,23 @@
 import { authApi } from "../api/auth.api";
+import { setCsrfToken } from "../api/axios";
 
 import type { LoginPayload, AuthUser } from "../types/auth";
 
-const TOKEN_KEY = "token";
-
 class AuthService {
   async login(data: LoginPayload): Promise<AuthUser> {
-    const { token, user } = await authApi.login(data);
+    const { csrf, user } = await authApi.login(data);
 
-    localStorage.setItem(TOKEN_KEY, token);
+    setCsrfToken(csrf);
 
     return user;
   }
 
   async me(): Promise<AuthUser> {
-    const response = await authApi.me();
+    const { csrf, user } = await authApi.me();
 
-    return response.user;
+    setCsrfToken(csrf);
+
+    return user;
   }
 
   async changePassword(currentPassword: string, newPassword: string) {
@@ -24,17 +25,11 @@ class AuthService {
   }
 
   async logout() {
-    localStorage.removeItem(TOKEN_KEY);
-
-    await authApi.logout();
-  }
-
-  getToken() {
-    return localStorage.getItem(TOKEN_KEY);
-  }
-
-  isAuthenticated() {
-    return Boolean(this.getToken());
+    try {
+      await authApi.logout();
+    } finally {
+      setCsrfToken(null);
+    }
   }
 }
 

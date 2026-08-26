@@ -11,6 +11,12 @@ import {
 
 import { authenticate } from "../middlewares/auth";
 import { authorize } from "../middlewares/authorize";
+import { validateBody } from "../middlewares/validate";
+import {
+  createServiceSchema,
+  updateServiceSchema,
+  updateStatusSchema,
+} from "../validators/service.validator";
 
 const router = Router();
 
@@ -34,11 +40,26 @@ router.get("/:id", authorize("admin", "cashier"), getServiceByIdController);
  * Gestion services
  * Admin uniquement
  */
-router.post("/", authorize("admin"), createServiceController);
+router.post(
+  "/",
+  authorize("admin"),
+  validateBody(createServiceSchema),
+  createServiceController,
+);
 
-router.patch("/:id", authorize("admin"), updateServiceController);
+router.patch(
+  "/:id",
+  authorize("admin"),
+  validateBody(updateServiceSchema),
+  updateServiceController,
+);
 
-router.patch("/:id/status", authorize("admin"), updateServiceStatusController);
+router.patch(
+  "/:id/status",
+  authorize("admin"),
+  validateBody(updateStatusSchema),
+  updateServiceStatusController,
+);
 
 router.delete("/:id", authorize("admin"), deleteServiceController);
 

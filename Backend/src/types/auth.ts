@@ -7,11 +7,13 @@ export type Role = UserRole;
 export interface JwtPayload {
   id: string;
   role: Role;
+  csrf: string;
 }
 
 export interface AuthRequest extends Request {
   user?: {
     id: string;
     role: Role;
+    csrf: string;
   };
 }

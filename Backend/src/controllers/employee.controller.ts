@@ -158,14 +158,6 @@ export const updateEmployeeStatusController = async (
   try {
     const { isActive } = req.body;
 
-    if (typeof isActive !== "boolean") {
-      return res.status(400).json({
-        success: false,
-
-        message: "isActive doit être un booléen",
-      });
-    }
-
     const employee = await updateEmployeeStatus(
       req.params.id as string,
       isActive,

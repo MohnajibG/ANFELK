@@ -7,7 +7,7 @@ export type AuthContextType = {
 
   loading: boolean;
 
-  login: (data: LoginPayload) => Promise<void>;
+  login: (data: LoginPayload) => Promise<AuthUser>;
 
   logout: () => Promise<void>;
 

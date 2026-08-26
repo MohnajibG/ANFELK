@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
+import { useAuth } from "../hooks/useAuth";
+
 import {
   CalendarDays,
   ChevronLeft,
@@ -39,17 +41,16 @@ const AdminLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [showMore, setShowMore] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const { user, logout: authLogout } = useAuth();
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  const logout = async () => {
+    await authLogout();
     navigate("/app");
   };
 
   const active = (path: string) => location.pathname.startsWith(path);
 
-  const initials = `${user.firstName?.charAt(0) ?? ""}${user.lastName?.charAt(0) ?? ""}`;
+  const initials = `${user?.firstName?.charAt(0) ?? ""}${user?.lastName?.charAt(0) ?? ""}`;
 
   return (
     <div className="flex min-h-screen bg-(--cream)">
@@ -211,7 +212,7 @@ const AdminLayout = () => {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-(--black)">
-                    {user.firstName} {user.lastName}
+                    {user?.firstName} {user?.lastName}
                   </p>
                   <p className="text-xs uppercase tracking-[0.2em] text-(--brown)">
                     Admin

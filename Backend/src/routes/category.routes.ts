@@ -11,6 +11,12 @@ import {
 
 import { authenticate } from "../middlewares/auth";
 import { authorize } from "../middlewares/authorize";
+import { validateBody } from "../middlewares/validate";
+import {
+  createCategorySchema,
+  updateCategorySchema,
+  updateStatusSchema,
+} from "../validators/category.validator";
 
 const router = Router();
 
@@ -25,7 +31,7 @@ router.use(authorize("admin"));
  * POST /api/categories
  * Créer une catégorie
  */
-router.post("/", createCategoryController);
+router.post("/", validateBody(createCategorySchema), createCategoryController);
 
 /**
  * GET /api/categories
@@ -43,13 +49,21 @@ router.get("/:id", getCategoryByIdController);
  * PATCH /api/categories/:id
  * Modifier une catégorie
  */
-router.patch("/:id", updateCategoryController);
+router.patch(
+  "/:id",
+  validateBody(updateCategorySchema),
+  updateCategoryController,
+);
 
 /**
  * PATCH /api/categories/:id/status
  * Activer / Désactiver une catégorie
  */
-router.patch("/:id/status", updateCategoryStatusController);
+router.patch(
+  "/:id/status",
+  validateBody(updateStatusSchema),
+  updateCategoryStatusController,
+);
 
 /**
  * DELETE /api/categories/:id

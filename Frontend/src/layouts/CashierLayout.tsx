@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+
+import { useAuth } from "../hooks/useAuth";
 import {
   CalendarDays,
   ChevronLeft,
@@ -36,11 +38,10 @@ const CashierLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [showMore, setShowMore] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const { user, logout: authLogout } = useAuth();
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  const logout = async () => {
+    await authLogout();
     navigate("/app");
   };
 
@@ -58,7 +59,7 @@ const CashierLayout = () => {
             INSTITUTE
           </p>
           <p className="text-xs text-(--role-shell-text)/60">
-            {user.firstName || "Caissier"}
+            {user?.firstName || "Caissier"}
           </p>
         </div>
 
@@ -200,7 +201,7 @@ const CashierLayout = () => {
                 CAISSIER
               </p>
               <p className="mt-2 text-sm text-(--role-shell-text)/70">
-                {user.firstName} {user.lastName}
+                {user?.firstName} {user?.lastName}
               </p>
             </>
           )}

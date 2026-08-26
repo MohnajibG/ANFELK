@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { AxiosError } from "axios";
 import {
   Eye,
   EyeOff,
@@ -9,6 +10,8 @@ import {
   Scissors,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+import { useAuth } from "../../hooks/useAuth";
 
 type Role = "admin" | "cashier" | "employee";
 
@@ -39,8 +42,15 @@ const roles: {
   },
 ];
 
+const dashboardByRole: Record<Role, string> = {
+  admin: "/admin/dashboard",
+  cashier: "/cashier/dashboard",
+  employee: "/employee/dashboard",
+};
+
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -57,63 +67,25 @@ const Login = () => {
     setError("");
     setLoading(true);
     try {
-      const response = await fetch(
-        "https://site--ankelk--dnxhn8mdblq5.code.run/api/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        },
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Email ou mot de passe incorrect");
-      }
-
-      const user = data.user;
-      const token = data.token;
-
-      if (!user || !user.role) {
-        throw new Error("Informations utilisateur invalides");
-      }
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      const dashboardByRole: Record<Role, string> = {
-        admin: "/admin/dashboard",
-        cashier: "/cashier/dashboard",
-        employee: "/employee/dashboard",
-      };
+      const currentUser = await login({ email, password });
 
       // Seuls les employés et les caissiers changent leur mot de passe
       // lors de la première connexion.
-      if (user.role !== "admin" && user.mustChangePassword === true) {
-        navigate("/change-password", {
-          replace: true,
-        });
+      if (currentUser.role !== "admin" && currentUser.mustChangePassword) {
+        navigate("/change-password", { replace: true });
 
         return;
       }
 
-      const role = user.role as Role;
-
-      navigate(dashboardByRole[role], {
-        replace: true,
-      });
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Impossible de se connecter au serveur",
-      );
+      navigate(dashboardByRole[currentUser.role], { replace: true });
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        setError(
+          err.response?.data?.message ?? "Email ou mot de passe incorrect",
+        );
+      } else {
+        setError("Impossible de se connecter au serveur");
+      }
     } finally {
       setLoading(false);
     }

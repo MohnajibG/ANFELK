@@ -26,7 +26,8 @@ class AuthApi {
   }
 
   async logout(): Promise<void> {
-    // logout serveur si nécessaire
+    // Le token est un cookie httpOnly : seul le backend peut l'effacer.
+    await api.post("/auth/logout");
   }
 }
 

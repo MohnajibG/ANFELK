@@ -22,6 +22,13 @@ import {
 
 import { authenticate } from "../middlewares/auth";
 import { authorize } from "../middlewares/authorize";
+import { validateBody } from "../middlewares/validate";
+import {
+  createAppointmentSchema,
+  updateAppointmentSchema,
+  rescheduleAppointmentSchema,
+} from "../validators/appointment.validator";
+import { createRecurringAppointmentSchema } from "../validators/recurrence.validator";
 
 const router = Router();
 
@@ -32,6 +39,7 @@ router.post(
   "/",
   authenticate,
   authorize("admin", "cashier"),
+  validateBody(createAppointmentSchema),
   createAppointmentController,
 );
 
@@ -52,6 +60,7 @@ router.post(
   "/recurring",
   authenticate,
   authorize("admin", "cashier"),
+  validateBody(createRecurringAppointmentSchema),
   createRecurringAppointmentController,
 );
 
@@ -130,6 +139,7 @@ router.patch(
   "/:id",
   authenticate,
   authorize("admin", "cashier"),
+  validateBody(updateAppointmentSchema),
   updateAppointmentController,
 );
 
@@ -140,6 +150,7 @@ router.patch(
   "/:id/reschedule",
   authenticate,
   authorize("admin", "cashier"),
+  validateBody(rescheduleAppointmentSchema),
   rescheduleAppointmentController,
 );
 

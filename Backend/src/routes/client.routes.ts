@@ -11,6 +11,12 @@ import {
 
 import { authenticate } from "../middlewares/auth";
 import { authorize } from "../middlewares/authorize";
+import { validateBody } from "../middlewares/validate";
+import {
+  createClientSchema,
+  updateClientSchema,
+  updateStatusSchema,
+} from "../validators/client.validator";
 
 const router = Router();
 
@@ -24,7 +30,12 @@ router.use(authenticate);
  *
  * Admin + Cashier
  */
-router.post("/", authorize("admin", "cashier"), createClientController);
+router.post(
+  "/",
+  authorize("admin", "cashier"),
+  validateBody(createClientSchema),
+  createClientController,
+);
 
 /**
  * Liste clients
@@ -45,14 +56,24 @@ router.get("/:id", authorize("admin", "cashier"), getClientByIdController);
  *
  * Admin + Cashier
  */
-router.patch("/:id", authorize("admin", "cashier"), updateClientController);
+router.patch(
+  "/:id",
+  authorize("admin", "cashier"),
+  validateBody(updateClientSchema),
+  updateClientController,
+);
 
 /**
  * Activer / désactiver
  *
  * Admin uniquement
  */
-router.patch("/:id/status", authorize("admin"), updateClientStatusController);
+router.patch(
+  "/:id/status",
+  authorize("admin"),
+  validateBody(updateStatusSchema),
+  updateClientStatusController,
+);
 
 /**
  * Suppression logique

@@ -19,7 +19,16 @@ import {
 
 import { authenticate } from "../middlewares/auth";
 import { authorize } from "../middlewares/authorize";
+import { validateBody } from "../middlewares/validate";
 import { AuthRequest } from "../types/auth";
+
+import {
+  createEmployeeSchema,
+  updateEmployeeSchema,
+  updateStatusSchema,
+  updateScheduleSchema,
+  addExceptionSchema,
+} from "../validators/employee.validator";
 
 const router = Router();
 
@@ -58,7 +67,12 @@ router.use(authenticate);
  *
  * Admin uniquement
  */
-router.post("/", authorize("admin"), createEmployeeController);
+router.post(
+  "/",
+  authorize("admin"),
+  validateBody(createEmployeeSchema),
+  createEmployeeController,
+);
 
 /**
  * GET /api/employees
@@ -97,7 +111,12 @@ router.get("/:id", authorize("admin", "cashier"), getEmployeeByIdController);
  *
  * Admin uniquement
  */
-router.patch("/:id", authorize("admin"), updateEmployeeController);
+router.patch(
+  "/:id",
+  authorize("admin"),
+  validateBody(updateEmployeeSchema),
+  updateEmployeeController,
+);
 
 /**
  * PATCH /api/employees/:id/status
@@ -106,7 +125,12 @@ router.patch("/:id", authorize("admin"), updateEmployeeController);
  *
  * Admin uniquement
  */
-router.patch("/:id/status", authorize("admin"), updateEmployeeStatusController);
+router.patch(
+  "/:id/status",
+  authorize("admin"),
+  validateBody(updateStatusSchema),
+  updateEmployeeStatusController,
+);
 
 /**
  * DELETE /api/employees/:id
@@ -133,7 +157,12 @@ router.get("/:id/schedule", selfOrStaff, getScheduleController);
  *
  * Admin uniquement
  */
-router.put("/:id/schedule", authorize("admin"), updateScheduleController);
+router.put(
+  "/:id/schedule",
+  authorize("admin"),
+  validateBody(updateScheduleSchema),
+  updateScheduleController,
+);
 
 /**
  * POST /api/employees/:id/schedule/exceptions
@@ -145,6 +174,7 @@ router.put("/:id/schedule", authorize("admin"), updateScheduleController);
 router.post(
   "/:id/schedule/exceptions",
   authorize("admin"),
+  validateBody(addExceptionSchema),
   addExceptionController,
 );
 

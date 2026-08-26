@@ -15,20 +15,31 @@ const getBaseURL = () => {
   return "https://site--ankelk--dnxhn8mdblq5.code.run/api";
 };
 
+// Jeton anti-CSRF reçu au login/me dans le corps JSON (jamais en cookie,
+// jamais en localStorage) : gardé en mémoire, perdu au rechargement de page,
+// ré-hydraté via /auth/me à chaque démarrage de l'app (voir AuthProvider).
+let csrfToken: string | null = null;
+
+export const setCsrfToken = (token: string | null) => {
+  csrfToken = token;
+};
+
 const api = axios.create({
   baseURL: getBaseURL(),
   headers: {
     "Content-Type": "application/json",
   },
+  // L'authentification repose sur le cookie httpOnly posé par le backend :
+  // withCredentials est indispensable pour qu'il parte avec chaque requête
+  // cross-site (front Vercel / back Northflank).
+  withCredentials: true,
 });
 
-// Ajout JWT automatique
+// Ajout automatique du header anti-CSRF sur les requêtes qui modifient l'état
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (csrfToken && config.method && config.method !== "get") {
+      config.headers["X-CSRF-Token"] = csrfToken;
     }
 
     return config;
@@ -36,13 +47,12 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Gestion expiration token / changement de mot de passe obligatoire
+// Gestion session expirée / changement de mot de passe obligatoire
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      setCsrfToken(null);
 
       window.location.href = "/app";
     }

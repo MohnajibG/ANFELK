@@ -22,8 +22,7 @@ export interface LoginPayload {
 export interface AuthResponse {
   success: boolean;
   user: AuthUser;
+  csrf: string;
 }
 
-export interface LoginResponse extends AuthResponse {
-  token: string;
-}
+export type LoginResponse = AuthResponse;

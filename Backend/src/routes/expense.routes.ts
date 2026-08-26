@@ -8,13 +8,15 @@ import {
 
 import { authenticate } from "../middlewares/auth";
 import { authorize } from "../middlewares/authorize";
+import { validateBody } from "../middlewares/validate";
+import { createExpenseSchema } from "../validators/expense.validator";
 
 const router = Router();
 
 router.use(authenticate);
 router.use(authorize("admin"));
 
-router.post("/", createExpenseController);
+router.post("/", validateBody(createExpenseSchema), createExpenseController);
 router.get("/", getExpensesController);
 router.delete("/:id", deleteExpenseController);
 

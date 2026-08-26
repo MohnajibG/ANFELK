@@ -1,14 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
 
+import { useAuth } from "../hooks/useAuth";
+
 type Role = "admin" | "cashier" | "employee";
 
 interface RoleRouteProps {
   allowedRoles: Role[];
-}
-
-interface StoredUser {
-  id: string;
-  role: Role;
 }
 
 const dashboardByRole: Record<Role, string> = {
@@ -18,29 +15,17 @@ const dashboardByRole: Record<Role, string> = {
 };
 
 const RoleRoute = ({ allowedRoles }: RoleRouteProps) => {
-  const storedUser = localStorage.getItem("user");
+  const { user, loading } = useAuth();
 
-  if (!storedUser) {
-    return <Navigate to="/app" replace />;
+  if (loading) {
+    return null;
   }
 
-  let user: StoredUser;
-
-  try {
-    user = JSON.parse(storedUser);
-  } catch {
-    localStorage.clear();
-
+  if (!user) {
     return <Navigate to="/app" replace />;
   }
 
   const role = user.role;
-
-  if (!role || !dashboardByRole[role]) {
-    localStorage.clear();
-
-    return <Navigate to="/app" replace />;
-  }
 
   if (!allowedRoles.includes(role)) {
     return <Navigate to={dashboardByRole[role]} replace />;

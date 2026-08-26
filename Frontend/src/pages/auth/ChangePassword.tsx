@@ -1,9 +1,19 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { AxiosError } from "axios";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import { useAuth } from "../../hooks/useAuth";
+import { authService } from "../../services/auth.service";
+
 type Role = "admin" | "cashier" | "employee";
+
+const dashboardByRole: Record<Role, string> = {
+  admin: "/admin/dashboard",
+  cashier: "/cashier/dashboard",
+  employee: "/employee/dashboard",
+};
 
 interface PasswordInputProps {
   value: string;
@@ -64,6 +74,7 @@ const PasswordInput = ({
 
 const ChangePassword = () => {
   const navigate = useNavigate();
+  const { user, refreshUser } = useAuth();
 
   const [currentPassword, setCurrentPassword] = useState("");
 
@@ -100,67 +111,31 @@ const ChangePassword = () => {
       return;
     }
 
+    if (!user) {
+      setError("Utilisateur introuvable");
+
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const token = localStorage.getItem("token");
+      await authService.changePassword(currentPassword, newPassword);
 
-      const response = await fetch(
-        "https://site--ankelk--dnxhn8mdblq5.code.run/api/auth/change-password",
-        {
-          method: "PATCH",
+      await refreshUser();
 
-          headers: {
-            "Content-Type": "application/json",
-
-            Authorization: `Bearer ${token}`,
-          },
-
-          body: JSON.stringify({
-            currentPassword,
-            newPassword,
-          }),
-        },
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ?? "Erreur lors du changement de mot de passe",
-        );
-      }
-
-      const storedUser = localStorage.getItem("user");
-
-      const user = storedUser ? JSON.parse(storedUser) : null;
-
-      if (!user?.role) {
-        throw new Error("Utilisateur introuvable");
-      }
-
-      const updatedUser = {
-        ...user,
-        mustChangePassword: false,
-      };
-
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-
-      const dashboardByRole: Record<Role, string> = {
-        admin: "/admin/dashboard",
-
-        cashier: "/cashier/dashboard",
-
-        employee: "/employee/dashboard",
-      };
-
-      const role = user.role as Role;
-
-      navigate(dashboardByRole[role], {
+      navigate(dashboardByRole[user.role as Role], {
         replace: true,
       });
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Erreur serveur");
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        setError(
+          err.response?.data?.message ??
+            "Erreur lors du changement de mot de passe",
+        );
+      } else {
+        setError("Erreur serveur");
+      }
     } finally {
       setLoading(false);
     }
