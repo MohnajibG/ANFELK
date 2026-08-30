@@ -7,6 +7,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  HelpCircle,
   LayoutDashboard,
   ListTodo,
   LogOut,
@@ -30,6 +31,7 @@ const links = [
   { label: "Liste d'attente", icon: ListTodo, path: "/cashier/waitlist" },
   { label: "Tickets", icon: Receipt, path: "/cashier/tickets" },
   { label: "Profil", icon: UserRound, path: "/cashier/profile" },
+  { label: "Aide", icon: HelpCircle, path: "/cashier/help" },
 ];
 
 const CashierLayout = () => {

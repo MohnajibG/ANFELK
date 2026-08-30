@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  HelpCircle,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -39,6 +40,11 @@ const links = [
     label: "Mon profil",
     icon: User,
     path: "/employee/profile",
+  },
+  {
+    label: "Aide",
+    icon: HelpCircle,
+    path: "/employee/help",
   },
 ];
 

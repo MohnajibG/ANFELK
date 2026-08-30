@@ -8,6 +8,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  HelpCircle,
   LayoutDashboard,
   Layers,
   ListTodo,
@@ -33,6 +34,7 @@ const links = [
   { label: "Tickets", icon: Receipt, path: "/admin/tickets" },
   { label: "Caisses", icon: Wallet, path: "/admin/cash-register" },
   { label: "Paramètres", icon: Settings, path: "/admin/settings" },
+  { label: "Aide", icon: HelpCircle, path: "/admin/help" },
 ];
 
 const AdminLayout = () => {

@@ -25,6 +25,7 @@ import Tickets from "../pages/admin/ticket";
 import CashRegisterHistory from "../pages/admin/CashRegisterHistory";
 import Waitlist from "../pages/admin/Waitlist";
 import Settings from "../pages/admin/Settings";
+import AdminHelp from "../pages/admin/Help";
 
 // Cashier pages
 import CashierDashboard from "../pages/cashier/Dashboard";
@@ -32,6 +33,7 @@ import POS from "../pages/cashier/POS";
 import Customers from "../pages/cashier/Customers";
 import CashierTickets from "../pages/cashier/Tickets";
 import CashierProfile from "../pages/cashier/Profile";
+import CashierHelp from "../pages/cashier/Help";
 
 // Employee pages
 import EmployeeDashboard from "../pages/employee/Dashboard";
@@ -39,6 +41,7 @@ import MyAppointments from "../pages/employee/MyAppointments";
 import EmployeeServices from "../pages/employee/Services";
 import MyStatistics from "../pages/employee/MyStatistics";
 import EmployeeProfile from "../pages/employee/Profile";
+import EmployeeHelp from "../pages/employee/Help";
 
 const AppRouter = () => {
   return (
@@ -82,6 +85,7 @@ const AppRouter = () => {
             <Route path="waitlist" element={<Waitlist />} />
             <Route path="tickets" element={<Tickets />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="help" element={<AdminHelp />} />
           </Route>
         </Route>
 
@@ -105,6 +109,7 @@ const AppRouter = () => {
             <Route path="appointments" element={<Appointments />} />
             <Route path="waitlist" element={<Waitlist />} />
             <Route path="profile" element={<CashierProfile />} />
+            <Route path="help" element={<CashierHelp />} />
           </Route>
         </Route>
 
@@ -126,6 +131,7 @@ const AppRouter = () => {
             <Route path="services" element={<EmployeeServices />} />
             <Route path="statistics/:month" element={<MyStatistics />} />
             <Route path="profile" element={<EmployeeProfile />} />
+            <Route path="help" element={<EmployeeHelp />} />
           </Route>
         </Route>
 
