@@ -17,6 +17,8 @@ import EditServiceModal from "../../components/service/EditServiceModal";
 import ViewServiceModal from "../../components/service/ViewServiceModal";
 import DeleteServiceModal from "../../components/service/DeleteServiceModal";
 import StatCard from "../../components/ui/StatCard";
+import Alert from "../../components/ui/Alert";
+import LoadingState from "../../components/ui/LoadingState";
 
 type ModalType = "add" | "edit" | "view" | "delete" | null;
 
@@ -123,11 +125,7 @@ const Services = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-100 items-center justify-center text-(--muted)">
-        Chargement des services...
-      </div>
-    );
+    return <LoadingState label="Chargement des services..." />;
   }
 
   return (
@@ -210,9 +208,7 @@ const Services = () => {
         </select>
       </div>
 
-      {error && (
-        <div className="rounded-2xl bg-red-50 p-4 text-red-600">{error}</div>
-      )}
+      {error && <Alert variant="danger">{error}</Alert>}
 
       <ServiceTable
         services={filteredServices}

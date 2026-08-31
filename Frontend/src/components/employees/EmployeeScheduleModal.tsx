@@ -9,6 +9,8 @@ import {
   removeException,
 } from "../../api/employeeSchedule.api";
 
+import LoadingState from "../ui/LoadingState";
+
 import {
   DAYS_OF_WEEK,
   DAY_LABELS,
@@ -147,7 +149,7 @@ const EmployeeScheduleModal = ({
         </div>
 
         {loading || !weeklyHours ? (
-          <div className="p-10 text-center text-stone-500">Chargement...</div>
+          <LoadingState />
         ) : (
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3">

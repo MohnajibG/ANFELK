@@ -37,6 +37,8 @@ import CloseRegisterModal from "../../components/POS/CloseRegisterModal";
 import AdminOpenRegisterModal from "../../components/cashRegister/AdminOpenRegisterModal";
 import EditTicketModal from "../../components/ticket/EditTicketModal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
+import Alert from "../../components/ui/Alert";
+import LoadingState from "../../components/ui/LoadingState";
 
 const CashRegisterHistory = () => {
   const [history, setHistory] = useState<CashRegister[]>([]);
@@ -298,11 +300,7 @@ const CashRegisterHistory = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-100 items-center justify-center text-(--muted)">
-        Chargement de l'historique des caisses...
-      </div>
-    );
+    return <LoadingState label="Chargement de l'historique des caisses..." />;
   }
 
   return (
@@ -368,9 +366,7 @@ const CashRegisterHistory = () => {
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-2xl bg-red-50 p-4 text-red-600">{error}</div>
-      )}
+      {error && <Alert variant="danger">{error}</Alert>}
 
       <div className="flex flex-col gap-3 rounded-3xl border border-(--border) bg-white p-5 md:flex-row">
         <div className="flex flex-1 items-center gap-3">
@@ -653,8 +649,8 @@ const CashRegisterHistory = () => {
         </div>
 
         {expensesError && (
-          <div className="mt-4 rounded-2xl bg-red-50 p-4 text-red-600">
-            {expensesError}
+          <div className="mt-4">
+            <Alert variant="danger">{expensesError}</Alert>
           </div>
         )}
 

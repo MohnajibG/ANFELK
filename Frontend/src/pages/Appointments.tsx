@@ -30,6 +30,7 @@ import AppointmentForm from "../components/appointments/AppointmentForm";
 import AppointmentDetailPanel from "../components/appointments/AppointmentDetailPanel";
 import CalendarView from "../components/calendar/CalendarView";
 import ConfirmModal from "../components/ui/ConfirmModal";
+import LoadingState from "../components/ui/LoadingState";
 
 import { getServices } from "../api/service.api";
 import { getEmployees } from "../api/employee.api";
@@ -445,8 +446,8 @@ const Appointments = () => {
           </div>
 
           {loading ? (
-            <div className="rounded-3xl bg-white p-10 text-center">
-              Chargement...
+            <div className="rounded-3xl bg-white p-10">
+              <LoadingState />
             </div>
           ) : filteredAppointments.length === 0 ? (
             <div className="rounded-3xl bg-white p-10 text-center text-stone-500">
