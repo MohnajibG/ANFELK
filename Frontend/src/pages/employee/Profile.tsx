@@ -11,6 +11,8 @@ import { useEffect, useState } from "react";
 
 import { getMyEmployeeProfile } from "../../api/employee.api";
 
+import LoadingState from "../../components/ui/LoadingState";
+
 import type { Employee } from "../../types/employee";
 
 const Profile = () => {
@@ -33,7 +35,7 @@ const Profile = () => {
   if (!employee) {
     return (
       <div className="rounded-3xl border border-(--border) bg-white p-6 shadow-(--shadow-sm)">
-        Chargement du profil...
+        <LoadingState label="Chargement du profil..." />
       </div>
     );
   }

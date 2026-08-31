@@ -14,6 +14,7 @@ import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/ui/StatCard";
 import LoadingState from "../../components/ui/LoadingState";
 import Badge from "../../components/ui/Badge";
+import Alert from "../../components/ui/Alert";
 
 const CashierDashboard = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -85,9 +86,7 @@ const CashierDashboard = () => {
   if (loading) return <LoadingState label="Chargement du dashboard..." />;
 
   if (error) {
-    return (
-      <div className="rounded-2xl bg-red-50 p-5 text-red-600">{error}</div>
-    );
+    return <Alert variant="danger">{error}</Alert>;
   }
 
   return (

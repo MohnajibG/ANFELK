@@ -11,6 +11,7 @@ import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/ui/StatCard";
 import LoadingState from "../../components/ui/LoadingState";
 import Badge from "../../components/ui/Badge";
+import Alert from "../../components/ui/Alert";
 
 const formatDA = (value: number) => `${value.toLocaleString("fr-FR")} DA`;
 
@@ -45,11 +46,7 @@ const EmployeeDashboard = () => {
   if (loading) return <LoadingState label="Chargement de votre espace..." />;
 
   if (error || !employee || !dashboard) {
-    return (
-      <div className="rounded-2xl bg-red-50 p-5 text-red-600">
-        {error || "Profil introuvable"}
-      </div>
-    );
+    return <Alert variant="danger">{error || "Profil introuvable"}</Alert>;
   }
 
   return (

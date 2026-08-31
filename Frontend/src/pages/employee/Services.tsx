@@ -3,6 +3,7 @@ import { Scissors, CalendarDays, User, HandCoins } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { getMyEmployeeProfile } from "../../api/employee.api";
+import LoadingState from "../../components/ui/LoadingState";
 import type { Employee } from "../../types/employee";
 
 interface EmployeeService {
@@ -42,7 +43,7 @@ const Services = () => {
   if (!employee) {
     return (
       <div className="rounded-3xl border border-(--border) bg-white p-6 shadow-(--shadow-sm)">
-        Chargement...
+        <LoadingState />
       </div>
     );
   }

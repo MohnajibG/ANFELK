@@ -4,6 +4,9 @@ import { Mail, ShieldCheck, UserRound, Briefcase } from "lucide-react";
 
 import { authApi } from "../../api/auth.api";
 
+import Alert from "../../components/ui/Alert";
+import LoadingState from "../../components/ui/LoadingState";
+
 import type { AuthUser } from "../../types/auth";
 
 const Profile = () => {
@@ -28,19 +31,10 @@ const Profile = () => {
     load();
   }, []);
 
-  if (loading)
-    return (
-      <div className="flex min-h-100 items-center justify-center text-(--muted)">
-        Chargement du profil...
-      </div>
-    );
+  if (loading) return <LoadingState label="Chargement du profil..." />;
 
   if (error || !user)
-    return (
-      <div className="rounded-3xl bg-red-50 p-6 text-red-600">
-        {error || "Utilisateur introuvable"}
-      </div>
-    );
+    return <Alert variant="danger">{error || "Utilisateur introuvable"}</Alert>;
 
   return (
     <div className="w-full space-y-6">

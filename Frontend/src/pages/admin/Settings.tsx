@@ -15,6 +15,7 @@ import type { AuthUser } from "../../types/auth";
 import PageHeader from "../../components/ui/PageHeader";
 import Badge from "../../components/ui/Badge";
 import LoadingState from "../../components/ui/LoadingState";
+import Alert from "../../components/ui/Alert";
 import ChangePasswordModal from "../../components/settings/ChangePasswordModal";
 
 const formatDate = (value?: string) =>
@@ -66,9 +67,9 @@ const Settings = () => {
 
   if (error || !user) {
     return (
-      <div className="rounded-3xl bg-red-50 p-6 text-red-600">
+      <Alert variant="danger">
         {error || "Utilisateur introuvable"}
-      </div>
+      </Alert>
     );
   }
 

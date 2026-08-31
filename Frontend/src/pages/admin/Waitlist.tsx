@@ -13,6 +13,8 @@ import { getEmployees } from "../../api/employee.api";
 import ClientAutocomplete from "../../components/appointments/ClientAutocomplete";
 import AppointmentServicesSelector from "../../components/appointments/AppointmentServicesSelector";
 import ConfirmModal from "../../components/ui/ConfirmModal";
+import Alert from "../../components/ui/Alert";
+import LoadingState from "../../components/ui/LoadingState";
 
 import type { WaitlistEntry, WaitlistStatus } from "../../types/waitlist";
 import type { AppointmentService } from "../../types/appointment";
@@ -213,11 +215,7 @@ const Waitlist = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            {error && (
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                {error}
-              </div>
-            )}
+            {error && <Alert variant="danger">{error}</Alert>}
 
             <ClientAutocomplete value={client} onChange={setClient} />
 
@@ -286,8 +284,8 @@ const Waitlist = () => {
       )}
 
       {loading ? (
-        <div className="rounded-3xl bg-white p-10 text-center">
-          Chargement...
+        <div className="rounded-3xl bg-white p-10">
+          <LoadingState />
         </div>
       ) : entries.length === 0 ? (
         <div className="rounded-3xl bg-white p-10 text-center text-stone-500">

@@ -9,6 +9,8 @@ import {
 import { useEffect, useMemo, useState } from "react";
 
 import { getClients } from "../../api/client.api";
+import Alert from "../../components/ui/Alert";
+import LoadingState from "../../components/ui/LoadingState";
 import type { Client } from "../../types/client";
 
 const Customers = () => {
@@ -43,12 +45,7 @@ const Customers = () => {
     [clients, search],
   );
 
-  if (loading)
-    return (
-      <div className="flex min-h-100 items-center justify-center text-(--muted)">
-        Chargement des clientes...
-      </div>
-    );
+  if (loading) return <LoadingState label="Chargement des clientes..." />;
 
   return (
     <div className="w-full space-y-6">
@@ -65,9 +62,7 @@ const Customers = () => {
         </button>
       </section>
 
-      {error && (
-        <div className="rounded-2xl bg-red-50 p-4 text-red-600">{error}</div>
-      )}
+      {error && <Alert variant="danger">{error}</Alert>}
 
       <section className="rounded-3xl border border-(--border) bg-white p-5 shadow-(--shadow-sm)">
         <div className="flex items-center gap-3 rounded-2xl border border-(--border) bg-(--cream) p-4">

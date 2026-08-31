@@ -13,6 +13,7 @@ import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/ui/StatCard";
 import SearchBar from "../../components/ui/SearchBar";
 import LoadingState from "../../components/ui/LoadingState";
+import Alert from "../../components/ui/Alert";
 
 type ModalType = "view" | "edit" | "cancel" | null;
 
@@ -179,9 +180,7 @@ const Tickets = () => {
         }
       />
 
-      {error && (
-        <div className="rounded-2xl bg-red-50 p-4 text-red-600">{error}</div>
-      )}
+      {error && <Alert variant="danger">{error}</Alert>}
 
       <TicketTable
         tickets={filteredTickets}

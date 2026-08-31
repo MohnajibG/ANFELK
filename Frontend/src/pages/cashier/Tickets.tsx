@@ -5,6 +5,8 @@ import useTickets from "../../hooks/useTickets";
 
 import ViewTicketModal from "../../components/ticket/ViewTicketModal";
 import ConfirmModal from "../../components/ui/ConfirmModal";
+import Alert from "../../components/ui/Alert";
+import LoadingState from "../../components/ui/LoadingState";
 
 import type { TicketStatus } from "../../types/ticket";
 
@@ -44,11 +46,7 @@ const CashierTickets = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-100 items-center justify-center text-(--muted)">
-        Chargement des tickets...
-      </div>
-    );
+    return <LoadingState label="Chargement des tickets..." />;
   }
 
   return (
@@ -61,9 +59,7 @@ const CashierTickets = () => {
         <p className="ak-muted">Consultez les ventes réalisées.</p>
       </section>
 
-      {error && (
-        <div className="rounded-2xl bg-red-50 p-4 text-red-600">{error}</div>
-      )}
+      {error && <Alert variant="danger">{error}</Alert>}
 
       <section className="flex flex-col gap-4 rounded-3xl border border-(--border) bg-white p-6 shadow-(--shadow-sm) md:flex-row">
         <div className="flex flex-1 items-center gap-3 rounded-xl border border-(--border) bg-(--cream) p-3">

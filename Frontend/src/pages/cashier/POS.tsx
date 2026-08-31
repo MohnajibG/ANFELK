@@ -13,6 +13,8 @@ import PaymentBox from "../../components/POS/PaymentBox";
 import OpenRegisterModal from "../../components/POS/OpenRegisterModal";
 import CloseRegisterModal from "../../components/POS/CloseRegisterModal";
 import RegisterStatusBar from "../../components/POS/RegisterStatusBar";
+import Alert from "../../components/ui/Alert";
+import LoadingState from "../../components/ui/LoadingState";
 
 const POS = () => {
   const cashRegister = useCashRegister();
@@ -21,11 +23,7 @@ const POS = () => {
   const [showCloseModal, setShowCloseModal] = useState(false);
 
   if (cashRegister.loading || pos.loading) {
-    return (
-      <div className="flex min-h-100 items-center justify-center text-(--muted)">
-        Chargement de la caisse...
-      </div>
-    );
+    return <LoadingState label="Chargement de la caisse..." />;
   }
 
   if (!cashRegister.isOpen || !cashRegister.register) {
@@ -79,22 +77,14 @@ const POS = () => {
         onRequestClose={() => setShowCloseModal(true)}
       />
 
-      {pos.error && (
-        <div className="rounded-2xl bg-red-50 p-4 text-red-600">
-          {pos.error}
-        </div>
-      )}
+      {pos.error && <Alert variant="danger">{pos.error}</Alert>}
 
       {cashRegister.error && !showCloseModal && (
-        <div className="rounded-2xl bg-red-50 p-4 text-red-600">
-          {cashRegister.error}
-        </div>
+        <Alert variant="danger">{cashRegister.error}</Alert>
       )}
 
       {pos.selectedAppointment && (
-        <div className="rounded-2xl bg-green-50 p-4 text-green-700">
-          Rendez-vous chargé dans le ticket
-        </div>
+        <Alert variant="success">Rendez-vous chargé dans le ticket</Alert>
       )}
 
       <div className="flex flex-col gap-6 lg:flex-row">

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getMyEmployeeProfile } from "../../api/employee.api";
 import { getEmployeeDashboard, type EmployeeDashboardData } from "../../api/dashboard.api";
+import LoadingState from "../../components/ui/LoadingState";
 
 import type { Employee } from "../../types/employee";
 
@@ -43,7 +44,7 @@ const MyStatistics = () => {
   if (loading || !employee || !dashboard) {
     return (
       <div className="rounded-3xl border border-(--border) bg-white p-6 shadow-(--shadow-sm)">
-        Chargement...
+        <LoadingState />
       </div>
     );
   }
