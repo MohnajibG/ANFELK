@@ -18,6 +18,7 @@ import StatCard from "../../components/ui/StatCard";
 import SearchBar from "../../components/ui/SearchBar";
 import EmptyState from "../../components/ui/EmptyState";
 import LoadingState from "../../components/ui/LoadingState";
+import Alert from "../../components/ui/Alert";
 import ClientReliabilityBadge from "../../components/clients/ClientReliabilityBadge";
 
 interface Client {
@@ -117,11 +118,7 @@ const Clients = () => {
         placeholder="Rechercher une cliente..."
       />
 
-      {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-          {error}
-        </div>
-      )}
+      {error && <Alert variant="danger">{error}</Alert>}
 
       <section className="overflow-hidden rounded-3xl border border-(--border) bg-white">
         {loading ? (
