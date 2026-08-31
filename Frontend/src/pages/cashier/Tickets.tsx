@@ -1,6 +1,10 @@
-import { Eye, Search, Receipt, XCircle, X } from "lucide-react";
+import { useState } from "react";
+import { Eye, Search, Receipt, XCircle } from "lucide-react";
 
 import useTickets from "../../hooks/useTickets";
+
+import ViewTicketModal from "../../components/ticket/ViewTicketModal";
+import ConfirmModal from "../../components/ui/ConfirmModal";
 
 import type { TicketStatus } from "../../types/ticket";
 
@@ -24,10 +28,19 @@ const CashierTickets = () => {
     handleCancel,
   } = useTickets();
 
-  const cancelTicket = async (id: string) => {
-    if (!confirm("Annuler ce ticket ?")) return;
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
-    await handleCancel(id);
+  const confirmCancel = async () => {
+    if (!cancelTarget) return;
+
+    try {
+      setCancelling(true);
+      await handleCancel(cancelTarget);
+      setCancelTarget(null);
+    } finally {
+      setCancelling(false);
+    }
   };
 
   if (loading) {
@@ -121,6 +134,7 @@ const CashierTickets = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setSelectedTicket(ticket)}
+                    aria-label="Voir le ticket"
                     className="rounded-xl bg-(--black) p-3 text-(--cream)"
                   >
                     <Eye size={18} />
@@ -128,7 +142,8 @@ const CashierTickets = () => {
 
                   {ticket.status === "paid" && (
                     <button
-                      onClick={() => cancelTicket(ticket._id)}
+                      onClick={() => setCancelTarget(ticket._id)}
+                      aria-label="Annuler le ticket"
                       className="rounded-xl bg-red-100 p-3 text-red-600"
                     >
                       <XCircle size={18} />
@@ -142,69 +157,21 @@ const CashierTickets = () => {
       </section>
 
       {selectedTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-5">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="font-title text-xl font-bold">
-                {selectedTicket.ticketNumber}
-              </h2>
-
-              <button
-                onClick={() => setSelectedTicket(null)}
-                className="rounded-xl p-2 hover:bg-(--cream)"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <p className="mt-2 text-sm text-(--muted)">
-              Payé le{" "}
-              {new Date(selectedTicket.createdAt).toLocaleString("fr-FR", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </p>
-
-            <div className="mt-5 flex flex-col gap-3">
-              {selectedTicket.items.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between rounded-xl bg-(--surface) p-4"
-                >
-                  <div>
-                    <p className="font-semibold">{item.name}</p>
-
-                    <p className="text-xs text-(--muted)">
-                      {item.duration} min
-                    </p>
-                  </div>
-
-                  <strong>{item.finalPrice.toLocaleString("fr-FR")} DA</strong>
-                </div>
-              ))}
-
-              {selectedTicket.discount > 0 && (
-                <div className="flex justify-between border-t border-(--border) pt-3 text-sm">
-                  <span>Remise</span>
-
-                  <strong>-{selectedTicket.discount} DA</strong>
-                </div>
-              )}
-
-              <div className="flex justify-between border-t border-(--border) pt-4 text-lg">
-                <span>Total</span>
-
-                <strong className="text-(--black)">
-                  {selectedTicket.total.toLocaleString("fr-FR")} DA
-                </strong>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ViewTicketModal
+          ticket={selectedTicket}
+          onClose={() => setSelectedTicket(null)}
+        />
       )}
+
+      <ConfirmModal
+        open={Boolean(cancelTarget)}
+        title="Annuler ce ticket ?"
+        description="Le ticket sera marqué comme annulé et retiré du chiffre d'affaires."
+        confirmLabel="Annuler le ticket"
+        loading={cancelling}
+        onConfirm={confirmCancel}
+        onCancel={() => setCancelTarget(null)}
+      />
     </div>
   );
 };

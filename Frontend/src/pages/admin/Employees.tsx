@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Plus, UserCog } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import {
   getEmployees,
@@ -19,6 +20,7 @@ import PageHeader from "../../components/ui/PageHeader";
 import SearchBar from "../../components/ui/SearchBar";
 import EmptyState from "../../components/ui/EmptyState";
 import LoadingState from "../../components/ui/LoadingState";
+import ConfirmModal from "../../components/ui/ConfirmModal";
 
 const Employees = () => {
   const navigate = useNavigate();
@@ -30,6 +32,8 @@ const Employees = () => {
   const [scheduleEmployeeId, setScheduleEmployeeId] = useState<string | null>(
     null,
   );
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadEmployees = useCallback(async () => {
     try {
@@ -38,6 +42,7 @@ const Employees = () => {
       setEmployees(data);
     } catch (error) {
       console.error(error);
+      toast.error("Impossible de charger les employés");
     } finally {
       setLoading(false);
     }
@@ -49,14 +54,29 @@ const Employees = () => {
   }, [loadEmployees]);
 
   const handleStatus = async (id: string, isActive: boolean) => {
-    await updateEmployeeStatus(id, isActive);
-    await loadEmployees();
+    try {
+      await updateEmployeeStatus(id, isActive);
+      await loadEmployees();
+    } catch (error) {
+      console.error(error);
+      toast.error("Impossible de modifier le statut");
+    }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Supprimer cet employé ?")) return;
-    await deleteEmployee(id);
-    await loadEmployees();
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      setDeleting(true);
+      await deleteEmployee(deleteTarget);
+      await loadEmployees();
+      setDeleteTarget(null);
+    } catch (error) {
+      console.error(error);
+      toast.error("Impossible de supprimer l'employé");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -102,7 +122,7 @@ const Employees = () => {
               key={employee._id}
               employee={employee}
               onStatusChange={handleStatus}
-              onDelete={handleDelete}
+              onDelete={setDeleteTarget}
               onView={(id) => navigate(`/admin/employees/${id}`)}
               onEdit={(id) =>
                 setEditEmployee(
@@ -133,6 +153,16 @@ const Employees = () => {
           onClose={() => setScheduleEmployeeId(null)}
         />
       )}
+
+      <ConfirmModal
+        open={Boolean(deleteTarget)}
+        title="Supprimer cet employé ?"
+        description="Cette action désactive définitivement son compte. Il ne pourra plus se connecter."
+        confirmLabel="Supprimer"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };

@@ -528,16 +528,20 @@ const getSalesInRangeForCashier = async (
   };
 };
 
-/**
- * Dashboard EMPLOYEE (inchangé, fix précédent conservé)
- */
-export const getEmployeeDashboard = async (employeeId: string) => {
-  const empId = new mongoose.Types.ObjectId(employeeId);
-
-  const performance = await Ticket.aggregate([
-    { $match: { status: "paid", "items.employee": empId } },
+const getSalesForEmployeeInRange = async (
+  range: DateRange,
+  employeeId: mongoose.Types.ObjectId,
+) => {
+  const result = await Ticket.aggregate([
+    {
+      $match: {
+        status: "paid",
+        "items.employee": employeeId,
+        createdAt: { $gte: range.start, $lte: range.end },
+      },
+    },
     { $unwind: "$items" },
-    { $match: { "items.employee": empId } },
+    { $match: { "items.employee": employeeId } },
     {
       $group: {
         _id: null,
@@ -547,13 +551,49 @@ export const getEmployeeDashboard = async (employeeId: string) => {
     },
   ]);
 
-  const clientsServed = await Ticket.distinct("client", {
+  return {
+    revenue: result[0]?.revenue || 0,
+    tickets: result[0]?.tickets || 0,
+  };
+};
+
+export interface EmployeeDashboardFilters {
+  date?: string;
+}
+
+/**
+ * Dashboard EMPLOYEE : chiffre du jour, chiffre du mois (ou du mois de
+ * `filters.date` si fourni, pour MyStatistics), prestations réalisées et
+ * évolution quotidienne sur le mois.
+ */
+export const getEmployeeDashboard = async (
+  employeeId: string,
+  filters: EmployeeDashboardFilters = {},
+) => {
+  const empId = new mongoose.Types.ObjectId(employeeId);
+
+  const today = getRange({ period: "day" });
+  const month = getRange({ period: "month", date: filters.date });
+
+  const [salesToday, salesMonth] = await Promise.all([
+    getSalesForEmployeeInRange(today, empId),
+    getSalesForEmployeeInRange(month, empId),
+  ]);
+
+  const clientsServedMonth = await Ticket.distinct("client", {
     "items.employee": empId,
     status: "paid",
+    createdAt: { $gte: month.start, $lte: month.end },
   });
 
-  const servicesDone = await Ticket.aggregate([
-    { $match: { "items.employee": empId, status: "paid" } },
+  const servicesDoneMonth = await Ticket.aggregate([
+    {
+      $match: {
+        "items.employee": empId,
+        status: "paid",
+        createdAt: { $gte: month.start, $lte: month.end },
+      },
+    },
     { $unwind: "$items" },
     { $match: { "items.employee": empId } },
     {
@@ -563,14 +603,33 @@ export const getEmployeeDashboard = async (employeeId: string) => {
       },
     },
     { $sort: { count: -1 } },
+    { $limit: 5 },
+  ]);
+
+  const evolution = await Ticket.aggregate([
+    {
+      $match: {
+        "items.employee": empId,
+        status: "paid",
+        createdAt: { $gte: month.start, $lte: month.end },
+      },
+    },
+    { $unwind: "$items" },
+    { $match: { "items.employee": empId } },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+        revenue: { $sum: "$items.finalPrice" },
+      },
+    },
+    { $sort: { _id: 1 } },
   ]);
 
   return {
-    performance: {
-      revenue: performance[0]?.revenue || 0,
-      tickets: performance[0]?.tickets || 0,
-    },
-    clientsServed: clientsServed.length,
-    servicesDone,
+    salesToday,
+    salesMonth,
+    clientsServedMonth: clientsServedMonth.length,
+    servicesDoneMonth,
+    evolution,
   };
 };

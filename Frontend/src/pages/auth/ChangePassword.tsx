@@ -58,6 +58,7 @@ const PasswordInput = ({
     <button
       type="button"
       onClick={() => setShow(!show)}
+      aria-label={show ? "Masquer le mot de passe" : "Afficher le mot de passe"}
       className="
         absolute
         right-5
@@ -257,6 +258,7 @@ const ChangePassword = () => {
 
           <button
             disabled={loading}
+            aria-label="Changer le mot de passe"
             className="
               flex
               min-h-14

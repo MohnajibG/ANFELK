@@ -33,6 +33,7 @@ const TicketCart = ({ cart, removeItem, updatePrice }: Props) => {
 
             <input
               type="number"
+              min="0"
               value={item.finalPrice}
               onChange={(e) => updatePrice(index, Number(e.target.value))}
               className="w-20 shrink-0 rounded-xl border border-(--border) p-2 text-right outline-none"
@@ -41,6 +42,7 @@ const TicketCart = ({ cart, removeItem, updatePrice }: Props) => {
             <button
               type="button"
               onClick={() => removeItem(index)}
+              aria-label={`Retirer ${item.service.name} du panier`}
               className="shrink-0 text-red-500"
             >
               <Trash2 size={18} />

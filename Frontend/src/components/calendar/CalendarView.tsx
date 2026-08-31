@@ -13,6 +13,8 @@ import type { Appointment } from "../../types/appointment";
 import type { Employee } from "../../types/employee";
 
 import AppointmentDetailPanel from "../appointments/AppointmentDetailPanel";
+import Alert from "../ui/Alert";
+import LoadingState from "../ui/LoadingState";
 import DayView from "./DayView";
 import WeekView from "./WeekView";
 import MonthView from "./MonthView";
@@ -158,6 +160,7 @@ const CalendarView = ({ canEdit, onCreateRequest }: CalendarViewProps) => {
           <button
             type="button"
             onClick={() => navigate(-1)}
+            aria-label="Période précédente"
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-(--border)"
           >
             <ChevronLeft size={18} />
@@ -174,6 +177,7 @@ const CalendarView = ({ canEdit, onCreateRequest }: CalendarViewProps) => {
           <button
             type="button"
             onClick={() => navigate(1)}
+            aria-label="Période suivante"
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-(--border)"
           >
             <ChevronRight size={18} />
@@ -215,14 +219,10 @@ const CalendarView = ({ canEdit, onCreateRequest }: CalendarViewProps) => {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-4 rounded-2xl bg-red-50 p-4 text-sm text-red-600">
-          {error}
-        </div>
-      )}
+      {error && <Alert variant="danger">{error}</Alert>}
 
       {loading ? (
-        <div className="p-10 text-center text-stone-500">Chargement...</div>
+        <LoadingState />
       ) : viewMode === "day" ? (
         <DayView
           appointments={appointments}

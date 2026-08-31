@@ -97,6 +97,7 @@ const EmployeeAutocomplete = ({ value, onChange }: Props) => {
           <button
             type="button"
             onClick={clearEmployee}
+            aria-label="Effacer l'employé sélectionné"
             className="absolute right-4 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-(--cream)"
           >
             <X size={15} />

@@ -1,32 +1,46 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { motion } from "framer-motion";
 import { HandCoins, Scissors, Users, TrendingUp } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { getMyEmployeeProfile } from "../../api/employee.api";
+import { getEmployeeDashboard, type EmployeeDashboardData } from "../../api/dashboard.api";
 
 import type { Employee } from "../../types/employee";
+
+const formatDA = (value: number) => `${value.toLocaleString("fr-FR")} DA`;
 
 const MyStatistics = () => {
   const { month } = useParams();
 
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [dashboard, setDashboard] = useState<EmployeeDashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const currentMonth = month ?? new Date().toISOString().slice(0, 7);
+
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [profile, dashboardData] = await Promise.all([
+        getMyEmployeeProfile(),
+        getEmployeeDashboard(`${currentMonth}-01`),
+      ]);
+      setEmployee(profile);
+      setDashboard(dashboardData);
+    } catch (error) {
+      console.error("Erreur statistiques employé", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentMonth]);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await getMyEmployeeProfile();
-
-        setEmployee(data);
-      } catch (error) {
-        console.error("Erreur profil employé", error);
-      }
-    };
-
     load();
-  }, []);
+  }, [load]);
 
-  if (!employee) {
+  if (loading || !employee || !dashboard) {
     return (
       <div className="rounded-3xl border border-(--border) bg-white p-6 shadow-(--shadow-sm)">
         Chargement...
@@ -34,7 +48,17 @@ const MyStatistics = () => {
     );
   }
 
-  const currentMonth = month ?? new Date().toISOString().slice(0, 7);
+  const averageBasket =
+    dashboard.salesMonth.tickets > 0
+      ? Math.round(dashboard.salesMonth.revenue / dashboard.salesMonth.tickets)
+      : 0;
+
+  const bestService = dashboard.servicesDoneMonth[0]?._id ?? "-";
+
+  const maxEvolutionRevenue = Math.max(
+    1,
+    ...dashboard.evolution.map((day) => day.revenue),
+  );
 
   return (
     <div className="w-full space-y-6">
@@ -54,19 +78,35 @@ const MyStatistics = () => {
 
       <div className="flex flex-wrap gap-4">
         <div className="w-full sm:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
-          <KpiCard title="Chiffre d'affaires" value="0 €" icon={HandCoins} />
+          <KpiCard
+            title="Chiffre d'affaires"
+            value={formatDA(dashboard.salesMonth.revenue)}
+            icon={HandCoins}
+          />
         </div>
 
         <div className="w-full sm:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
-          <KpiCard title="Prestations réalisées" value="0" icon={Scissors} />
+          <KpiCard
+            title="Prestations réalisées"
+            value={String(dashboard.salesMonth.tickets)}
+            icon={Scissors}
+          />
         </div>
 
         <div className="w-full sm:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
-          <KpiCard title="Clients reçus" value="0" icon={Users} />
+          <KpiCard
+            title="Clients reçus"
+            value={String(dashboard.clientsServedMonth)}
+            icon={Users}
+          />
         </div>
 
         <div className="w-full sm:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
-          <KpiCard title="Panier moyen" value="0 €" icon={TrendingUp} />
+          <KpiCard
+            title="Panier moyen"
+            value={formatDA(averageBasket)}
+            icon={TrendingUp}
+          />
         </div>
       </div>
 
@@ -79,20 +119,27 @@ const MyStatistics = () => {
             Évolution du chiffre d'affaires
           </h2>
 
-          <div className="flex h-64 items-end gap-3 rounded-3xl bg-(--surface) p-5">
-            {[30, 45, 60, 40, 70, 80, 65].map((height, index) => (
-              <div
-                key={index}
-                className="flex-1 rounded-full bg-(--black)"
-                style={{
-                  height: `${height}%`,
-                }}
-              />
-            ))}
-          </div>
+          {dashboard.evolution.length === 0 ? (
+            <div className="rounded-3xl bg-(--surface) p-5 text-sm text-(--muted)">
+              Aucune vente ce mois-ci
+            </div>
+          ) : (
+            <div className="flex h-64 items-end gap-1.5 rounded-3xl bg-(--surface) p-5">
+              {dashboard.evolution.map((day) => (
+                <div
+                  key={day._id}
+                  title={`${day._id} : ${formatDA(day.revenue)}`}
+                  className="flex-1 rounded-full bg-(--black)"
+                  style={{
+                    height: `${Math.max(4, (day.revenue / maxEvolutionRevenue) * 100)}%`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
           <p className="ak-muted mt-4 text-sm">
-            Évolution quotidienne du mois sélectionné
+            Chiffre d'affaires quotidien du mois sélectionné
           </p>
         </motion.div>
 
@@ -104,15 +151,12 @@ const MyStatistics = () => {
 
           <div className="space-y-4 text-sm">
             <p>
-              Meilleure prestation :<b> - </b>
+              Meilleure prestation :<b className="ml-1">{bestService}</b>
             </p>
 
             <p>
-              Meilleur jour :<b> - </b>
-            </p>
-
-            <p>
-              Évolution :<b className="ml-2 text-green-600">-</b>
+              Total tickets encaissés :
+              <b className="ml-1">{dashboard.salesMonth.tickets}</b>
             </p>
           </div>
         </motion.div>
@@ -120,9 +164,27 @@ const MyStatistics = () => {
         <motion.div className="w-full rounded-3xl border border-(--border) bg-white p-6 shadow-(--shadow-sm)">
           <h2 className="mb-5 font-semibold">Prestations réalisées</h2>
 
-          <div className="rounded-2xl bg-(--surface) p-5 text-sm text-(--muted)">
-            Aucune donnée disponible
-          </div>
+          {dashboard.servicesDoneMonth.length === 0 ? (
+            <div className="rounded-2xl bg-(--surface) p-5 text-sm text-(--muted)">
+              Aucune donnée disponible
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {dashboard.servicesDoneMonth.map((service) => (
+                <div
+                  key={service._id}
+                  className="flex items-center justify-between rounded-2xl bg-(--surface) p-4 text-sm"
+                >
+                  <span className="font-medium text-(--black)">
+                    {service._id}
+                  </span>
+                  <span className="font-semibold text-(--brown)">
+                    {service.count} fois
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

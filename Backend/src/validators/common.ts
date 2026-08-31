@@ -17,3 +17,11 @@ export const zDate = z.coerce.date().refine((date) => !isNaN(date.getTime()), {
 
 export const trimmedString = (message = "Champ requis") =>
   z.string().trim().min(1, message);
+
+/**
+ * Les formulaires HTML envoient souvent "" pour un champ optionnel non
+ * rempli (select, input date) plutôt que d'omettre la clé. zod ne traite
+ * pas "" comme "absent" pour un champ .optional() — ce wrapper le fait.
+ */
+export const emptyToUndefined = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((value) => (value === "" ? undefined : value), schema);

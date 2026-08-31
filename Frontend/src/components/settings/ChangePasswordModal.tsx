@@ -144,6 +144,7 @@ const ChangePasswordModal = ({ open, onClose }: ChangePasswordModalProps) => {
 
               <button
                 disabled={loading}
+                aria-label="Modifier le mot de passe"
                 className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-(--black) px-5 py-3 text-(--cream) transition hover:bg-(--brown-dark) disabled:opacity-50"
               >
                 {loading ? (
@@ -192,6 +193,7 @@ const PasswordField = ({
       <button
         type="button"
         onClick={onToggleShow}
+        aria-label={show ? "Masquer le mot de passe" : "Afficher le mot de passe"}
         className="absolute right-3 text-(--muted) transition hover:text-(--black)"
       >
         {show ? <EyeOff size={17} /> : <Eye size={17} />}

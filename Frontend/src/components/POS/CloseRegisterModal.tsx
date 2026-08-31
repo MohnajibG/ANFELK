@@ -62,6 +62,7 @@ const CloseRegisterModal = ({
 
           <button
             onClick={onCancel}
+            aria-label="Fermer"
             className="rounded-xl border border-(--border) p-2 hover:bg-(--cream)"
           >
             <X size={18} />

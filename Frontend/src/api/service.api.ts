@@ -39,8 +39,11 @@ export const deleteService = async (id: string): Promise<void> => {
   await api.delete(`/services/${id}`);
 };
 
-export const toggleServiceStatus = async (id: string): Promise<Service> => {
-  const { data } = await api.patch(`/services/${id}/status`);
+export const toggleServiceStatus = async (
+  id: string,
+  isActive: boolean,
+): Promise<Service> => {
+  const { data } = await api.patch(`/services/${id}/status`, { isActive });
 
   return data.service ?? data;
 };

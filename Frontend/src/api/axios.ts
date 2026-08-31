@@ -51,7 +51,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // /auth/me est appelé à chaque chargement de page pour vérifier si une
+    // session existe : un 401 y est un état normal (visiteur non connecté),
+    // pas une session expirée. AuthProvider le gère déjà lui-même — rediriger
+    // ici en plus provoquerait une boucle de rechargement infinie sur /app.
+    const isMeCheck = error.config?.url?.includes("/auth/me");
+
+    if (
+      error.response?.status === 401 &&
+      !isMeCheck &&
+      window.location.pathname !== "/app"
+    ) {
       setCsrfToken(null);
 
       window.location.href = "/app";

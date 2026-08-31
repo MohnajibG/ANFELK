@@ -34,6 +34,7 @@ const ViewServiceModal = ({ service, onClose }: Props) => {
       <div className="relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-xl">
         <button
           onClick={onClose}
+          aria-label="Fermer"
           className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-(--cream)"
         >
           <X size={18} />

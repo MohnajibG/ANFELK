@@ -131,6 +131,7 @@ const EmployeeScheduleModal = ({
       <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-xl">
         <button
           onClick={onClose}
+          aria-label="Fermer"
           className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-(--cream)"
         >
           <X size={18} />
@@ -222,6 +223,7 @@ const EmployeeScheduleModal = ({
 
                     <button
                       onClick={() => handleRemoveException(exception._id)}
+                      aria-label="Supprimer cette exception"
                       className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600"
                     >
                       <Trash2 size={14} />

@@ -112,7 +112,7 @@ const Services = () => {
 
   const handleToggle = async (service: Service) => {
     try {
-      const updated = await toggleServiceStatus(service._id);
+      const updated = await toggleServiceStatus(service._id, !service.isActive);
 
       setServices((current) =>
         current.map((item) => (item._id === service._id ? updated : item)),

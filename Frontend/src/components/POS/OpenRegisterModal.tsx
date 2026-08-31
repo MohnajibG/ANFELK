@@ -57,6 +57,7 @@ const OpenRegisterModal = ({ onOpen, loading, error }: Props) => {
 
           <button
             disabled={loading || amount === ""}
+            aria-label="Ouvrir la caisse"
             className="flex items-center justify-center gap-2 rounded-2xl bg-(--black) py-4 font-semibold text-(--cream) transition hover:bg-(--brown-dark) disabled:opacity-50"
           >
             {loading ? (

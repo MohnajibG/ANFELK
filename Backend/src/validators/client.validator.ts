@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { trimmedString, zDate } from "./common";
+import { emptyToUndefined, trimmedString, zDate } from "./common";
 
 export const createClientSchema = z
   .object({
@@ -7,8 +7,8 @@ export const createClientSchema = z
     lastName: trimmedString("Nom requis"),
     phone: z.string().trim().optional(),
     email: z.string().trim().email("Email invalide").optional().or(z.literal("")),
-    gender: z.enum(["female", "male"]).optional(),
-    birthDate: zDate.optional(),
+    gender: emptyToUndefined(z.enum(["female", "male"]).optional()),
+    birthDate: emptyToUndefined(zDate.optional()),
     notes: z.string().trim().optional(),
   })
   .refine((data) => Boolean(data.phone) || Boolean(data.email), {
@@ -21,8 +21,8 @@ export const updateClientSchema = z.object({
   lastName: trimmedString().optional(),
   phone: z.string().trim().optional(),
   email: z.string().trim().email("Email invalide").optional().or(z.literal("")),
-  gender: z.enum(["female", "male"]).optional(),
-  birthDate: zDate.optional(),
+  gender: emptyToUndefined(z.enum(["female", "male"]).optional()),
+  birthDate: emptyToUndefined(zDate.optional()),
   notes: z.string().trim().optional(),
 });
 

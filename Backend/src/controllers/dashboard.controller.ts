@@ -48,7 +48,9 @@ export const getDashboardController = async (
         break;
 
       case "employee":
-        dashboard = await getEmployeeDashboard(user.id);
+        dashboard = await getEmployeeDashboard(user.id, {
+          date: typeof req.query.date === "string" ? req.query.date : undefined,
+        });
 
         break;
 

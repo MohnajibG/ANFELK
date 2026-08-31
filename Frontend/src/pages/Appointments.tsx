@@ -29,6 +29,7 @@ import type { Appointment, AppointmentStatus } from "../types/appointment";
 import AppointmentForm from "../components/appointments/AppointmentForm";
 import AppointmentDetailPanel from "../components/appointments/AppointmentDetailPanel";
 import CalendarView from "../components/calendar/CalendarView";
+import ConfirmModal from "../components/ui/ConfirmModal";
 
 import { getServices } from "../api/service.api";
 import { getEmployees } from "../api/employee.api";
@@ -98,12 +99,23 @@ const Appointments = () => {
   const isEmployee = user?.role === "employee";
   const canDelete = user?.role === "admin" || user?.role === "cashier";
 
+  type PendingAction =
+    | { type: "cancel"; id: string }
+    | { type: "cancelSeries"; id: string }
+    | { type: "delete"; id: string };
+
+  const [confirmAction, setConfirmAction] = useState<PendingAction | null>(
+    null,
+  );
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
   const refreshAppointments = useCallback(async () => {
     try {
       const data = await getAppointments();
       setAppointments(data);
     } catch (error) {
       console.error("Erreur chargement rendez-vous:", error);
+      toast.error("Impossible de charger les rendez-vous");
     }
   }, []);
 
@@ -163,6 +175,7 @@ const Appointments = () => {
       setEmployees(employeesData);
     } catch (error) {
       console.error("Erreur chargement formulaire rendez-vous:", error);
+      toast.error("Impossible de charger le formulaire");
     }
   }, []);
 
@@ -187,12 +200,11 @@ const Appointments = () => {
       );
     } catch (error) {
       console.error("Erreur modification statut:", error);
+      toast.error("Impossible de modifier le statut");
     }
   };
 
   const handleCancel = async (id: string) => {
-    if (!confirm("Annuler ce rendez-vous ?")) return;
-
     const target = appointments.find((appointment) => appointment._id === id);
 
     try {
@@ -238,13 +250,11 @@ const Appointments = () => {
       }
     } catch (error) {
       console.error("Erreur annulation:", error);
+      toast.error("Impossible d'annuler le rendez-vous");
     }
   };
 
   const handleCancelSeries = async (recurrenceGroupId: string) => {
-    if (!confirm("Annuler toutes les prochaines occurrences de cette série ?"))
-      return;
-
     try {
       const cancelled = await cancelRecurrenceSeries(recurrenceGroupId);
       const cancelledIds = new Set(cancelled.map((a) => a._id));
@@ -265,8 +275,6 @@ const Appointments = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Supprimer définitivement ce rendez-vous ?")) return;
-
     try {
       await deleteAppointment(id);
 
@@ -275,7 +283,49 @@ const Appointments = () => {
       );
     } catch (error) {
       console.error("Erreur suppression:", error);
+      toast.error("Impossible de supprimer le rendez-vous");
     }
+  };
+
+  const runConfirmedAction = async () => {
+    if (!confirmAction) return;
+
+    try {
+      setConfirmLoading(true);
+
+      if (confirmAction.type === "cancel") {
+        await handleCancel(confirmAction.id);
+      } else if (confirmAction.type === "cancelSeries") {
+        await handleCancelSeries(confirmAction.id);
+      } else {
+        await handleDelete(confirmAction.id);
+      }
+
+      setConfirmAction(null);
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
+
+  const confirmModalContent: Record<
+    PendingAction["type"],
+    { title: string; description: string; confirmLabel: string }
+  > = {
+    cancel: {
+      title: "Annuler ce rendez-vous ?",
+      description: "Le client sera notifié que son créneau est libéré.",
+      confirmLabel: "Annuler le rendez-vous",
+    },
+    cancelSeries: {
+      title: "Annuler toute la série ?",
+      description: "Toutes les prochaines occurrences de ce rendez-vous récurrent seront annulées.",
+      confirmLabel: "Annuler la série",
+    },
+    delete: {
+      title: "Supprimer définitivement ce rendez-vous ?",
+      description: "Cette action est irréversible.",
+      confirmLabel: "Supprimer",
+    },
   };
 
   return (
@@ -482,7 +532,9 @@ const Appointments = () => {
 
                       <button
                         title="Annuler"
-                        onClick={() => handleCancel(appointment._id)}
+                        onClick={() =>
+                          setConfirmAction({ type: "cancel", id: appointment._id })
+                        }
                         className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-700"
                       >
                         <X size={15} />
@@ -492,7 +544,10 @@ const Appointments = () => {
                         <button
                           title="Annuler la série"
                           onClick={() =>
-                            handleCancelSeries(appointment.recurrenceGroupId!)
+                            setConfirmAction({
+                              type: "cancelSeries",
+                              id: appointment.recurrenceGroupId!,
+                            })
                           }
                           className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-700"
                         >
@@ -503,7 +558,9 @@ const Appointments = () => {
                       {canDelete && (
                         <button
                           title="Supprimer"
-                          onClick={() => handleDelete(appointment._id)}
+                          onClick={() =>
+                            setConfirmAction({ type: "delete", id: appointment._id })
+                          }
                           className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 text-stone-700"
                         >
                           <Trash2 size={15} />
@@ -611,7 +668,9 @@ const Appointments = () => {
 
                           <button
                             title="Annuler"
-                            onClick={() => handleCancel(appointment._id)}
+                            onClick={() =>
+                          setConfirmAction({ type: "cancel", id: appointment._id })
+                        }
                             className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-700"
                           >
                             <X size={15} />
@@ -621,9 +680,10 @@ const Appointments = () => {
                             <button
                               title="Annuler la série"
                               onClick={() =>
-                                handleCancelSeries(
-                                  appointment.recurrenceGroupId!,
-                                )
+                                setConfirmAction({
+                                  type: "cancelSeries",
+                                  id: appointment.recurrenceGroupId!,
+                                })
                               }
                               className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-700"
                             >
@@ -634,7 +694,9 @@ const Appointments = () => {
                           {canDelete && (
                             <button
                               title="Supprimer"
-                              onClick={() => handleDelete(appointment._id)}
+                              onClick={() =>
+                                setConfirmAction({ type: "delete", id: appointment._id })
+                              }
                               className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 text-stone-700"
                             >
                               <Trash2 size={15} />
@@ -651,6 +713,24 @@ const Appointments = () => {
           )}
         </>
       )}
+
+      <ConfirmModal
+        open={Boolean(confirmAction)}
+        title={confirmAction ? confirmModalContent[confirmAction.type].title : ""}
+        description={
+          confirmAction
+            ? confirmModalContent[confirmAction.type].description
+            : undefined
+        }
+        confirmLabel={
+          confirmAction
+            ? confirmModalContent[confirmAction.type].confirmLabel
+            : undefined
+        }
+        loading={confirmLoading}
+        onConfirm={runConfirmedAction}
+        onCancel={() => setConfirmAction(null)}
+      />
     </section>
   );
 };

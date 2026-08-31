@@ -1,4 +1,4 @@
-import { Banknote /* , CreditCard, WalletCards */ } from "lucide-react";
+import { Banknote } from "lucide-react";
 
 import type { PaymentMethod } from "../../hooks/usePOS";
 
@@ -36,28 +36,11 @@ const PaymentBox = ({
         <div className="mt-5 flex gap-2">
           <button
             onClick={() => setPaymentMethod("cash")}
+            aria-label="Paiement en espèces"
             className={`flex-1 ${buttonClass(paymentMethod === "cash")}`}
           >
             <Banknote size={18} className="mx-auto" />
           </button>
-
-          {/* Paiement par carte désactivé temporairement
-          <button
-            onClick={() => setPaymentMethod("card")}
-            className={`flex-1 ${buttonClass(paymentMethod === "card")}`}
-          >
-            <CreditCard size={18} className="mx-auto" />
-          </button>
-          */}
-
-          {/* Paiement par virement désactivé temporairement
-          <button
-            onClick={() => setPaymentMethod("transfer")}
-            className={`flex-1 ${buttonClass(paymentMethod === "transfer")}`}
-          >
-            <WalletCards size={18} className="mx-auto" />
-          </button>
-          */}
         </div>
 
         <button

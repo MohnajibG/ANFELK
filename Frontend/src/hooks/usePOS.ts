@@ -59,9 +59,6 @@ const usePOS = (options?: UsePOSOptions) => {
             getEmployees(),
             getWaitingPaymentAppointments(),
           ]);
-        console.log("SERVICES", servicesData);
-        console.log("EMPLOYEES", employeesData);
-        console.log("APPOINTMENTS", appointmentsData);
         setServices(Array.isArray(servicesData) ? servicesData : []);
 
         setEmployees(
@@ -124,12 +121,14 @@ const usePOS = (options?: UsePOSOptions) => {
   };
 
   const updatePrice = (index: number, price: number) => {
+    const safePrice = Math.max(0, price);
+
     setCart((prev) =>
       prev.map((item, i) =>
         i === index
           ? {
               ...item,
-              finalPrice: price,
+              finalPrice: safePrice,
             }
           : item,
       ),
@@ -204,6 +203,10 @@ const usePOS = (options?: UsePOSOptions) => {
 
     if (cart.some((item) => !item.employee)) {
       setError("Choisir un employé pour chaque prestation");
+      return;
+    }
+
+    if (!window.confirm(`Confirmer l'encaissement de ${total} DA ?`)) {
       return;
     }
 

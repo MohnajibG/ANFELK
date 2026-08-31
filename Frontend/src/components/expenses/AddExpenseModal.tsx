@@ -172,6 +172,7 @@ const AddExpenseModal = ({ open, onClose, onCreated }: AddExpenseModalProps) => 
 
           <button
             disabled={loading}
+            aria-label="Ajouter la charge"
             className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-(--black) px-5 py-3 text-(--cream) transition hover:bg-(--brown-dark) disabled:opacity-50"
           >
             {loading ? (

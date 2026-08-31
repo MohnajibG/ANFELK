@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { CalendarClock, Clock, User } from "lucide-react";
 
 import { getTodayAppointments } from "../../api/appointment.api";
+import LoadingState from "../ui/LoadingState";
 import type { Appointment, AppointmentStatus } from "../../types/appointment";
 
 type Props = {
@@ -52,8 +53,8 @@ const TodayAppointments = ({ onSelect }: Props) => {
 
   if (loading) {
     return (
-      <section className="rounded-3xl border border-(--border) bg-white p-5 text-sm text-(--muted)">
-        Chargement des rendez-vous du jour...
+      <section className="rounded-3xl border border-(--border) bg-white p-5">
+        <LoadingState label="Chargement des rendez-vous du jour..." />
       </section>
     );
   }

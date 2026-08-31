@@ -1,30 +1,51 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 
-import { X, UserPlus, Loader2 } from "lucide-react";
+import { X, UserPlus, Pencil, Loader2 } from "lucide-react";
+import { AxiosError } from "axios";
 
-import { createClient } from "../../api/client.api";
+import { createClient, updateClient } from "../../api/client.api";
+
+interface ClientToEdit {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+}
 
 interface Props {
   open: boolean;
+  client?: ClientToEdit | null;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-const AddClientModal = ({ open, onClose, onSuccess }: Props) => {
+const emptyForm = {
+  firstName: "",
+  lastName: "",
+  phone: "",
+  email: "",
+  gender: "",
+  birthDate: "",
+  notes: "",
+};
+
+const ClientFormModal = ({ open, client, onClose, onSuccess }: Props) => {
   const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState("");
+  const [form, setForm] = useState(() =>
+    client
+      ? {
+          ...emptyForm,
+          firstName: client.firstName,
+          lastName: client.lastName,
+          phone: client.phone,
+          email: client.email ?? "",
+        }
+      : emptyForm,
+  );
 
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    email: "",
-    gender: "",
-    birthDate: "",
-    notes: "",
-  });
+  const isEditing = Boolean(client);
 
   if (!open) return null;
 
@@ -35,7 +56,6 @@ const AddClientModal = ({ open, onClose, onSuccess }: Props) => {
   ) => {
     setForm({
       ...form,
-
       [e.target.name]: e.target.value,
     });
   };
@@ -46,21 +66,25 @@ const AddClientModal = ({ open, onClose, onSuccess }: Props) => {
     try {
       setLoading(true);
       setError("");
-      await createClient(form);
+
+      if (isEditing && client) {
+        await updateClient(client._id, form);
+      } else {
+        await createClient(form);
+      }
+
       onSuccess();
       onClose();
+    } catch (err) {
+      const message =
+        err instanceof AxiosError
+          ? err.response?.data?.message
+          : undefined;
 
-      setForm({
-        firstName: "",
-        lastName: "",
-        phone: "",
-        email: "",
-        gender: "",
-        birthDate: "",
-        notes: "",
-      });
-    } catch (err: any) {
-      setError(err.message || "Erreur lors de la création de la cliente");
+      setError(
+        message ??
+          `Erreur lors de ${isEditing ? "la modification" : "la création"} de la cliente`,
+      );
     } finally {
       setLoading(false);
     }
@@ -71,6 +95,7 @@ const AddClientModal = ({ open, onClose, onSuccess }: Props) => {
       <div className="relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-xl">
         <button
           onClick={onClose}
+          aria-label="Fermer"
           className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-(--cream)"
         >
           <X size={18} />
@@ -82,11 +107,13 @@ const AddClientModal = ({ open, onClose, onSuccess }: Props) => {
           </p>
 
           <h2 className="mt-2 font-title text-2xl font-bold text-(--black)">
-            Ajouter une cliente
+            {isEditing ? "Modifier la cliente" : "Ajouter une cliente"}
           </h2>
 
           <p className="mt-2 text-sm text-(--muted)">
-            Créer une nouvelle fiche cliente
+            {isEditing
+              ? "Mettre à jour la fiche cliente"
+              : "Créer une nouvelle fiche cliente"}
           </p>
         </div>
 
@@ -129,35 +156,37 @@ const AddClientModal = ({ open, onClose, onSuccess }: Props) => {
             className="h-11 w-full rounded-2xl border border-(--border) bg-(--cream) px-4"
           />
 
-          <select
-            name="gender"
-            value={form.gender}
-            onChange={handleChange}
-            className="h-11 w-full rounded-2xl border border-(--border) bg-(--cream) px-4"
-          >
-            <option value="">Genre</option>
+          {!isEditing && (
+            <>
+              <select
+                name="gender"
+                value={form.gender}
+                onChange={handleChange}
+                className="h-11 w-full rounded-2xl border border-(--border) bg-(--cream) px-4"
+              >
+                <option value="">Genre</option>
+                <option value="female">Femme</option>
+                <option value="male">Homme</option>
+              </select>
 
-            <option value="female">Femme</option>
+              <input
+                name="birthDate"
+                type="date"
+                value={form.birthDate}
+                onChange={handleChange}
+                className="h-11 w-full rounded-2xl border border-(--border) bg-(--cream) px-4"
+              />
 
-            <option value="male">Homme</option>
-          </select>
-
-          <input
-            name="birthDate"
-            type="date"
-            value={form.birthDate}
-            onChange={handleChange}
-            className="h-11 w-full rounded-2xl border border-(--border) bg-(--cream) px-4"
-          />
-
-          <textarea
-            name="notes"
-            value={form.notes}
-            onChange={handleChange}
-            placeholder="Remarques..."
-            rows={3}
-            className="w-full rounded-2xl border border-(--border) bg-(--cream) p-4"
-          />
+              <textarea
+                name="notes"
+                value={form.notes}
+                onChange={handleChange}
+                placeholder="Remarques..."
+                rows={3}
+                className="w-full rounded-2xl border border-(--border) bg-(--cream) p-4"
+              />
+            </>
+          )}
 
           {error && (
             <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
@@ -174,6 +203,11 @@ const AddClientModal = ({ open, onClose, onSuccess }: Props) => {
                 <Loader2 size={18} className="animate-spin" />
                 Enregistrement...
               </>
+            ) : isEditing ? (
+              <>
+                <Pencil size={18} />
+                Enregistrer les modifications
+              </>
             ) : (
               <>
                 <UserPlus size={18} />
@@ -187,4 +221,4 @@ const AddClientModal = ({ open, onClose, onSuccess }: Props) => {
   );
 };
 
-export default AddClientModal;
+export default ClientFormModal;

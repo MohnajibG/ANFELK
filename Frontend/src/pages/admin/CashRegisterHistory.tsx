@@ -36,6 +36,7 @@ import AddExpenseModal from "../../components/expenses/AddExpenseModal";
 import CloseRegisterModal from "../../components/POS/CloseRegisterModal";
 import AdminOpenRegisterModal from "../../components/cashRegister/AdminOpenRegisterModal";
 import EditTicketModal from "../../components/ticket/EditTicketModal";
+import ConfirmModal from "../../components/ui/ConfirmModal";
 
 const CashRegisterHistory = () => {
   const [history, setHistory] = useState<CashRegister[]>([]);
@@ -78,15 +79,26 @@ const CashRegisterHistory = () => {
     loadExpenses();
   }, [loadExpenses]);
 
-  const handleDeleteExpense = async (id: string) => {
-    if (!window.confirm("Supprimer cette charge ?")) return;
+  const [expenseDeleteTarget, setExpenseDeleteTarget] = useState<string | null>(
+    null,
+  );
+  const [deletingExpense, setDeletingExpense] = useState(false);
+
+  const confirmDeleteExpense = async () => {
+    if (!expenseDeleteTarget) return;
 
     try {
-      await deleteExpense(id);
-      setExpenses((prev) => prev.filter((expense) => expense._id !== id));
+      setDeletingExpense(true);
+      await deleteExpense(expenseDeleteTarget);
+      setExpenses((prev) =>
+        prev.filter((expense) => expense._id !== expenseDeleteTarget),
+      );
+      setExpenseDeleteTarget(null);
     } catch (err) {
       console.error("[CashRegisterHistory] deleteExpense:", err);
       setExpensesError("Impossible de supprimer cette charge");
+    } finally {
+      setDeletingExpense(false);
     }
   };
 
@@ -692,7 +704,7 @@ const CashRegisterHistory = () => {
                     <span className="font-semibold">{expense.amount} DA</span>
 
                     <button
-                      onClick={() => handleDeleteExpense(expense._id)}
+                      onClick={() => setExpenseDeleteTarget(expense._id)}
                       aria-label="Supprimer"
                       className="rounded-xl p-2 text-red-600 transition hover:bg-red-50"
                     >
@@ -769,6 +781,15 @@ const CashRegisterHistory = () => {
           }}
         />
       )}
+
+      <ConfirmModal
+        open={Boolean(expenseDeleteTarget)}
+        title="Supprimer cette charge ?"
+        confirmLabel="Supprimer"
+        loading={deletingExpense}
+        onConfirm={confirmDeleteExpense}
+        onCancel={() => setExpenseDeleteTarget(null)}
+      />
     </div>
   );
 };

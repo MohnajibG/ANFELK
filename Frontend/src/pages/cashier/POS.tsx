@@ -56,13 +56,22 @@ const POS = () => {
           </p>
         </div>
 
-        <div
-          onClick={pos.newTicket}
-          className="flex cursor-pointer items-center gap-3 rounded-xl bg-(--cream) px-5 py-3"
+        <button
+          onClick={() => {
+            if (
+              pos.cart.length === 0 ||
+              window.confirm(
+                "Démarrer une nouvelle vente ? Le ticket en cours sera perdu.",
+              )
+            ) {
+              pos.newTicket();
+            }
+          }}
+          className="flex items-center gap-3 rounded-xl bg-(--cream) px-5 py-3 transition hover:bg-(--surface)"
         >
           <Receipt size={20} />
           Nouvelle vente
-        </div>
+        </button>
       </section>
 
       <RegisterStatusBar

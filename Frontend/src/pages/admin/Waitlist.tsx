@@ -12,6 +12,7 @@ import { getEmployees } from "../../api/employee.api";
 
 import ClientAutocomplete from "../../components/appointments/ClientAutocomplete";
 import AppointmentServicesSelector from "../../components/appointments/AppointmentServicesSelector";
+import ConfirmModal from "../../components/ui/ConfirmModal";
 
 import type { WaitlistEntry, WaitlistStatus } from "../../types/waitlist";
 import type { AppointmentService } from "../../types/appointment";
@@ -58,6 +59,8 @@ const Waitlist = () => {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -65,6 +68,7 @@ const Waitlist = () => {
       setEntries(data);
     } catch (err) {
       console.error("Erreur chargement liste d'attente:", err);
+      toast.error("Impossible de charger la liste d'attente");
     }
   }, []);
 
@@ -90,6 +94,7 @@ const Waitlist = () => {
       setShowForm(true);
     } catch (err) {
       console.error("Erreur chargement formulaire:", err);
+      toast.error("Impossible de charger le formulaire");
     }
   };
 
@@ -149,19 +154,25 @@ const Waitlist = () => {
     }
   };
 
-  const handleCancel = async (id: string) => {
-    if (!confirm("Retirer cette entrée de la liste d'attente ?")) return;
+  const confirmCancel = async () => {
+    if (!cancelTarget) return;
 
     try {
-      await cancelWaitlistEntry(id);
+      setCancelling(true);
+      await cancelWaitlistEntry(cancelTarget);
       setEntries((current) =>
         current.map((entry) =>
-          entry._id === id ? { ...entry, status: "cancelled" } : entry,
+          entry._id === cancelTarget
+            ? { ...entry, status: "cancelled" }
+            : entry,
         ),
       );
+      setCancelTarget(null);
     } catch (err) {
       console.error("Erreur annulation entrée liste d'attente:", err);
       toast.error("Erreur lors du retrait de la liste d'attente");
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -192,7 +203,11 @@ const Waitlist = () => {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Nouvelle entrée</h2>
 
-            <button onClick={() => setShowForm(false)} type="button">
+            <button
+              onClick={() => setShowForm(false)}
+              type="button"
+              aria-label="Fermer"
+            >
               <X size={20} />
             </button>
           </div>
@@ -336,7 +351,7 @@ const Waitlist = () => {
               {entry.status === "waiting" && (
                 <div className="mt-5 flex flex-wrap gap-2 border-t border-(--border) pt-4">
                   <button
-                    onClick={() => handleCancel(entry._id)}
+                    onClick={() => setCancelTarget(entry._id)}
                     className="flex items-center gap-2 rounded-xl bg-red-100 px-4 py-2 text-red-700"
                   >
                     <Trash2 size={16} />
@@ -348,6 +363,16 @@ const Waitlist = () => {
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        open={Boolean(cancelTarget)}
+        title="Retirer cette entrée ?"
+        description="La cliente ne sera plus proposée automatiquement pour un créneau libéré."
+        confirmLabel="Retirer"
+        loading={cancelling}
+        onConfirm={confirmCancel}
+        onCancel={() => setCancelTarget(null)}
+      />
     </section>
   );
 };

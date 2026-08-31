@@ -131,6 +131,7 @@ const AdminOpenRegisterModal = ({
 
           <button
             disabled={loading}
+            aria-label="Ouvrir la caisse"
             className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-(--black) px-5 py-3 text-(--cream) transition hover:bg-(--brown-dark) disabled:opacity-50"
           >
             {loading ? (

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CalendarCheck, HandCoins, Scissors, TrendingUp, Users } from "lucide-react";
 
 import { getMyEmployeeProfile } from "../../api/employee.api";
+import { getEmployeeDashboard, type EmployeeDashboardData } from "../../api/dashboard.api";
 import type { Employee } from "../../types/employee";
 
 import PageHeader from "../../components/ui/PageHeader";
@@ -11,32 +12,39 @@ import StatCard from "../../components/ui/StatCard";
 import LoadingState from "../../components/ui/LoadingState";
 import Badge from "../../components/ui/Badge";
 
+const formatDA = (value: number) => `${value.toLocaleString("fr-FR")} DA`;
+
 const EmployeeDashboard = () => {
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [dashboard, setDashboard] = useState<EmployeeDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadProfile = useCallback(async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
-      const data = await getMyEmployeeProfile();
-      setEmployee(data);
+      const [profile, dashboardData] = await Promise.all([
+        getMyEmployeeProfile(),
+        getEmployeeDashboard(),
+      ]);
+      setEmployee(profile);
+      setDashboard(dashboardData);
     } catch (err) {
-      console.error("Erreur chargement profil employé", err);
-      setError("Impossible de charger votre profil");
+      console.error("Erreur chargement tableau de bord employé", err);
+      setError("Impossible de charger votre espace");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadProfile();
-  }, [loadProfile]);
+    load();
+  }, [load]);
 
   if (loading) return <LoadingState label="Chargement de votre espace..." />;
 
-  if (error || !employee) {
+  if (error || !employee || !dashboard) {
     return (
       <div className="rounded-2xl bg-red-50 p-5 text-red-600">
         {error || "Profil introuvable"}
@@ -58,23 +66,23 @@ const EmployeeDashboard = () => {
           <StatCard
             icon={HandCoins}
             title="Chiffre du jour"
-            value="0 DA"
+            value={formatDA(dashboard.salesToday.revenue)}
             accent="black"
           />
         </div>
         <div className="w-full *:h-full sm:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
           <StatCard
             icon={Scissors}
-            title="Prestations réalisées"
-            value={0}
+            title="Prestations du jour"
+            value={dashboard.salesToday.tickets}
             accent="gold"
           />
         </div>
         <div className="w-full *:h-full sm:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
           <StatCard
             icon={Users}
-            title="Clients reçus"
-            value={0}
+            title="Clients reçus ce mois"
+            value={dashboard.clientsServedMonth}
             accent="info"
           />
         </div>
@@ -82,7 +90,7 @@ const EmployeeDashboard = () => {
           <StatCard
             icon={TrendingUp}
             title="Chiffre du mois"
-            value="0 DA"
+            value={formatDA(dashboard.salesMonth.revenue)}
             accent="success"
           />
         </div>
@@ -93,21 +101,34 @@ const EmployeeDashboard = () => {
           whileHover={{ scale: 1.01 }}
           className="w-full rounded-md border border-(--border) bg-white p-6 shadow-(--shadow-sm) sm:p-6 lg:w-[calc(66.667%-8px)]"
         >
-          <h2 className="mb-4 font-semibold text-(--black)">Performance</h2>
-
-          <div className="flex h-64 w-full items-end gap-3 rounded-3xl border border-(--border) bg-(--surface) p-5">
-            {[30, 45, 40, 65, 55, 80, 70].map((height, index) => (
-              <div
-                key={index}
-                className="flex-1 rounded-full bg-(--black)"
-                style={{ height: `${height}%` }}
-              />
-            ))}
+          <div className="mb-4 flex items-center gap-2">
+            <CalendarCheck size={20} className="text-(--brown)" />
+            <h2 className="font-semibold text-(--black)">
+              Prestations réalisées ce mois
+            </h2>
           </div>
 
-          <p className="mt-4 text-sm text-(--muted)">
-            Évolution des prestations sur les 7 derniers jours
-          </p>
+          {dashboard.servicesDoneMonth.length === 0 ? (
+            <div className="rounded-2xl border border-(--border) bg-(--surface) p-5 text-sm text-(--muted)">
+              Aucune prestation ce mois-ci
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {dashboard.servicesDoneMonth.map((service) => (
+                <div
+                  key={service._id}
+                  className="flex items-center justify-between rounded-2xl border border-(--border) bg-(--surface) p-4"
+                >
+                  <span className="text-sm font-medium text-(--black)">
+                    {service._id}
+                  </span>
+                  <span className="text-sm font-semibold text-(--brown)">
+                    {service.count} fois
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         <motion.div
@@ -127,22 +148,6 @@ const EmployeeDashboard = () => {
               label="Nom complet"
               value={`${employee.firstName} ${employee.lastName}`}
             />
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.01 }}
-          className="w-full rounded-md border border-(--border) bg-white p-6 shadow-(--shadow-sm) sm:p-6"
-        >
-          <div className="mb-4 flex items-center gap-2">
-            <CalendarCheck size={20} className="text-(--brown)" />
-            <h2 className="font-semibold text-(--black)">
-              Dernières prestations
-            </h2>
-          </div>
-
-          <div className="rounded-2xl border border-(--border) bg-(--surface) p-5 text-sm text-(--muted)">
-            Aucune prestation récente
           </div>
         </motion.div>
       </section>

@@ -46,6 +46,7 @@ const EditCategoryModal = ({ category, onUpdated, onClose }: Props) => {
         <button
           type="button"
           onClick={onClose}
+          aria-label="Fermer"
           className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-(--cream)"
         >
           <X size={18} />

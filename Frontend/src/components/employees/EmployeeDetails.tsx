@@ -17,6 +17,9 @@ import {
 
 import { getEmployeeById } from "../../api/employee.api";
 
+import Alert from "../ui/Alert";
+import LoadingState from "../ui/LoadingState";
+
 import type { Employee } from "../../types/employee";
 
 const recentServices = [
@@ -74,17 +77,15 @@ const EmployeeDetails = () => {
 
   if (loading) {
     return (
-      <div className="rounded-3xl border border-(--border) bg-white p-10 text-center text-(--brown)">
-        Chargement du profil...
+      <div className="rounded-3xl border border-(--border) bg-white p-10">
+        <LoadingState label="Chargement du profil..." />
       </div>
     );
   }
 
   if (error || !employee) {
     return (
-      <div className="rounded-3xl border border-red-200 bg-red-50 p-10 text-center text-red-600">
-        {error || "Employé introuvable"}
-      </div>
+      <Alert variant="danger">{error || "Employé introuvable"}</Alert>
     );
   }
 

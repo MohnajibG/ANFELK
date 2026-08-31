@@ -9,6 +9,7 @@ import {
   deleteAppointment,
   cancelRecurrenceSeries,
 } from "../../api/appointment.api";
+import ConfirmModal from "../ui/ConfirmModal";
 
 import type { Appointment, AppointmentStatus } from "../../types/appointment";
 
@@ -49,6 +50,10 @@ const AppointmentDetailPanel = ({
     appointment.noShowReason ?? "",
   );
   const [saving, setSaving] = useState(false);
+  const [confirmType, setConfirmType] = useState<
+    "cancel" | "cancelSeries" | "delete" | null
+  >(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   const clientLabel =
     typeof appointment.client === "string"
@@ -81,8 +86,6 @@ const AppointmentDetailPanel = ({
   };
 
   const handleCancel = async () => {
-    if (!confirm("Annuler ce rendez-vous ?")) return;
-
     try {
       await cancelAppointment(appointment._id);
       toast.success("Rendez-vous annulé");
@@ -95,8 +98,6 @@ const AppointmentDetailPanel = ({
 
   const handleCancelSeries = async () => {
     if (!appointment.recurrenceGroupId) return;
-    if (!confirm("Annuler toutes les prochaines occurrences de cette série ?"))
-      return;
 
     try {
       const cancelled = await cancelRecurrenceSeries(
@@ -111,8 +112,6 @@ const AppointmentDetailPanel = ({
   };
 
   const handleDelete = async () => {
-    if (!confirm("Supprimer définitivement ce rendez-vous ?")) return;
-
     try {
       await deleteAppointment(appointment._id);
       toast.success("Rendez-vous supprimé");
@@ -123,11 +122,49 @@ const AppointmentDetailPanel = ({
     }
   };
 
+  const runConfirmedAction = async () => {
+    if (!confirmType) return;
+
+    try {
+      setConfirmLoading(true);
+
+      if (confirmType === "cancel") await handleCancel();
+      else if (confirmType === "cancelSeries") await handleCancelSeries();
+      else await handleDelete();
+    } finally {
+      setConfirmLoading(false);
+      setConfirmType(null);
+    }
+  };
+
+  const confirmContent: Record<
+    "cancel" | "cancelSeries" | "delete",
+    { title: string; description: string; confirmLabel: string }
+  > = {
+    cancel: {
+      title: "Annuler ce rendez-vous ?",
+      description: "Le créneau sera libéré.",
+      confirmLabel: "Annuler le rendez-vous",
+    },
+    cancelSeries: {
+      title: "Annuler toute la série ?",
+      description:
+        "Toutes les prochaines occurrences de ce rendez-vous récurrent seront annulées.",
+      confirmLabel: "Annuler la série",
+    },
+    delete: {
+      title: "Supprimer définitivement ce rendez-vous ?",
+      description: "Cette action est irréversible.",
+      confirmLabel: "Supprimer",
+    },
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-xl">
         <button
           onClick={onClose}
+          aria-label="Fermer"
           className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-(--cream)"
         >
           <X size={18} />
@@ -247,7 +284,7 @@ const AppointmentDetailPanel = ({
             </button>
 
             <button
-              onClick={handleCancel}
+              onClick={() => setConfirmType("cancel")}
               className="rounded-2xl bg-red-100 px-5 py-3 text-red-700"
             >
               Annuler le rdv
@@ -255,7 +292,7 @@ const AppointmentDetailPanel = ({
 
             {appointment.recurrenceGroupId && (
               <button
-                onClick={handleCancelSeries}
+                onClick={() => setConfirmType("cancelSeries")}
                 className="flex items-center gap-2 rounded-2xl bg-red-50 px-5 py-3 text-red-700"
               >
                 <Repeat size={16} />
@@ -264,7 +301,7 @@ const AppointmentDetailPanel = ({
             )}
 
             <button
-              onClick={handleDelete}
+              onClick={() => setConfirmType("delete")}
               className="flex items-center gap-2 rounded-2xl bg-stone-100 px-5 py-3 text-stone-700"
             >
               <Trash2 size={16} />
@@ -273,6 +310,16 @@ const AppointmentDetailPanel = ({
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        open={Boolean(confirmType)}
+        title={confirmType ? confirmContent[confirmType].title : ""}
+        description={confirmType ? confirmContent[confirmType].description : undefined}
+        confirmLabel={confirmType ? confirmContent[confirmType].confirmLabel : undefined}
+        loading={confirmLoading}
+        onConfirm={runConfirmedAction}
+        onCancel={() => setConfirmType(null)}
+      />
     </div>
   );
 };

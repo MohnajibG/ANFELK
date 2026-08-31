@@ -253,6 +253,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                     className="absolute right-5 top-1/2 -translate-y-1/2 text-(--muted) transition hover:text-(--black)"
                   >
                     {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
@@ -268,6 +269,7 @@ const Login = () => {
 
               <button
                 disabled={loading}
+                aria-label="Se connecter"
                 className="flex min-h-14 items-center justify-center gap-2 rounded-xl bg-(--black) px-8 font-body font-semibold text-(--white) transition hover:bg-(--gold) disabled:opacity-60"
               >
                 {loading ? (

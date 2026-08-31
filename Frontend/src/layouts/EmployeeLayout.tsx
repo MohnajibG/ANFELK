@@ -83,6 +83,7 @@ const EmployeeLayout = () => {
 
         <button
           onClick={logout}
+          aria-label="Déconnexion"
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--role-shell-accent) text-(--role-shell-accent-text)"
         >
           <LogOut size={18} />
@@ -91,10 +92,11 @@ const EmployeeLayout = () => {
 
       {/* MOBILE NAV */}
       <nav className="fixed bottom-0 left-0 z-50 flex h-20 w-full items-center justify-around border-t border-(--role-shell-border) bg-(--role-shell-bg) md:hidden">
-        {links.map(({ path, icon: Icon }) => (
+        {links.map(({ path, icon: Icon, label }) => (
           <button
             key={path}
             onClick={() => navigate(path)}
+            aria-label={label}
             className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
               active(path)
                 ? "bg-(--role-shell-accent) text-(--role-shell-accent-text)"
@@ -129,6 +131,7 @@ const EmployeeLayout = () => {
 
         <button
           onClick={logout}
+          aria-label="Déconnexion"
           className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-500/10 text-red-500"
         >
           <LogOut size={18} />
@@ -160,6 +163,7 @@ const EmployeeLayout = () => {
 
           <button
             onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? "Développer le menu" : "Réduire le menu"}
             className="absolute -right-4 top-8 flex h-8 w-8 items-center justify-center rounded-full border border-(--role-shell-border) bg-(--role-shell-bg) text-(--role-shell-text)"
           >
             {collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
@@ -179,6 +183,7 @@ const EmployeeLayout = () => {
                       }
                       setOpenStats(!openStats);
                     }}
+                    aria-label={label}
                     className={`flex items-center rounded-xl transition ${
                       collapsed
                         ? "justify-center py-3"
@@ -227,6 +232,7 @@ const EmployeeLayout = () => {
               <button
                 key={path}
                 onClick={() => navigate(path)}
+                aria-label={label}
                 className={`flex items-center rounded-xl text-sm transition ${
                   collapsed ? "justify-center py-3" : "gap-3 px-4 py-3"
                 } ${
@@ -245,6 +251,7 @@ const EmployeeLayout = () => {
         <div className="border-t border-(--role-shell-border) p-4">
           <button
             onClick={logout}
+            aria-label="Déconnexion"
             className="flex w-full items-center justify-center gap-3 rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-600"
           >
             <LogOut size={18} />

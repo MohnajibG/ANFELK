@@ -69,6 +69,7 @@ const AdminLayout = () => {
 
         <button
           onClick={logout}
+          aria-label="Déconnexion"
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--black) text-(--cream)"
         >
           <LogOut size={18} />
@@ -77,10 +78,11 @@ const AdminLayout = () => {
 
       {/* MOBILE NAV */}
       <nav className="fixed bottom-0 left-0 z-50 flex h-20 w-full items-center justify-around border-t border-(--border) bg-white md:hidden">
-        {links.slice(0, 4).map(({ path, icon: Icon }) => (
+        {links.slice(0, 4).map(({ path, icon: Icon, label }) => (
           <button
             key={path}
             onClick={() => navigate(path)}
+            aria-label={label}
             className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
               active(path) ? "bg-(--black) text-(--cream)" : "text-(--brown)"
             }`}
@@ -91,6 +93,7 @@ const AdminLayout = () => {
 
         <button
           onClick={() => setShowMore(true)}
+          aria-label="Plus d'options"
           className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
             links.slice(4).some(({ path }) => active(path))
               ? "bg-(--black) text-(--cream)"
@@ -126,6 +129,7 @@ const AdminLayout = () => {
                 </h2>
                 <button
                   onClick={() => setShowMore(false)}
+                  aria-label="Fermer"
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-(--cream)"
                 >
                   <X size={18} />
@@ -185,6 +189,7 @@ const AdminLayout = () => {
         </nav>
         <button
           onClick={logout}
+          aria-label="Déconnexion"
           className="flex h-11 w-11 items-center justify-center rounded-xl bg-(--black) text-(--cream)"
         >
           <LogOut size={18} />
@@ -226,6 +231,7 @@ const AdminLayout = () => {
 
           <button
             onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? "Développer le menu" : "Réduire le menu"}
             className="absolute -right-4 top-8 flex h-8 w-8 items-center justify-center rounded-full border border-(--border) bg-white shadow-sm"
           >
             {collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
@@ -237,6 +243,7 @@ const AdminLayout = () => {
             <button
               key={path}
               onClick={() => navigate(path)}
+              aria-label={label}
               className={`group relative flex items-center rounded-xl transition ${
                 collapsed ? "justify-center py-3" : "gap-4 px-4 py-3"
               } ${active(path) ? "bg-(--black) text-(--cream)" : "text-(--muted) hover:bg-(--cream) hover:text-(--black)"}`}
@@ -254,6 +261,7 @@ const AdminLayout = () => {
 
         <button
           onClick={logout}
+          aria-label="Déconnexion"
           className="m-4 flex items-center justify-center gap-3 rounded-xl bg-(--black) py-3 text-(--cream) transition hover:bg-(--brown-dark)"
         >
           <LogOut size={18} />

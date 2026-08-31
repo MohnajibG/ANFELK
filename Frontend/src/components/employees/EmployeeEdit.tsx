@@ -5,6 +5,8 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import EmployeeForm from "../../components/employees/EmployeeForm";
+import Alert from "../ui/Alert";
+import LoadingState from "../ui/LoadingState";
 
 import { getEmployeeById, updateEmployee } from "../../api/employee.api";
 
@@ -90,17 +92,15 @@ const EmployeeEdit = () => {
 
   if (loading) {
     return (
-      <div className="rounded-3xl border border-(--border) bg-white p-10 text-center">
-        Chargement...
+      <div className="rounded-3xl border border-(--border) bg-white p-10">
+        <LoadingState />
       </div>
     );
   }
 
   if (!employee) {
     return (
-      <div className="rounded-3xl border border-red-200 bg-red-50 p-10 text-center text-red-600">
-        {error || "Employé introuvable"}
-      </div>
+      <Alert variant="danger">{error || "Employé introuvable"}</Alert>
     );
   }
 
@@ -144,8 +144,8 @@ const EmployeeEdit = () => {
         </div>
 
         {error && (
-          <div className="mb-5 rounded-xl bg-red-50 p-3 text-sm text-red-600">
-            {error}
+          <div className="mb-5">
+            <Alert variant="danger">{error}</Alert>
           </div>
         )}
 

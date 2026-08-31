@@ -67,6 +67,7 @@ const CashierLayout = () => {
 
         <button
           onClick={logout}
+          aria-label="Déconnexion"
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--role-shell-accent) text-(--role-shell-accent-text)"
         >
           <LogOut size={18} />
@@ -75,10 +76,11 @@ const CashierLayout = () => {
 
       {/* MOBILE NAV */}
       <nav className="fixed bottom-0 left-0 z-50 flex h-20 w-full items-center justify-around border-t border-(--role-shell-border) bg-(--role-shell-bg) md:hidden">
-        {links.slice(0, 4).map(({ path, icon: Icon }) => (
+        {links.slice(0, 4).map(({ path, icon: Icon, label }) => (
           <button
             key={path}
             onClick={() => navigate(path)}
+            aria-label={label}
             className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${active(path) ? "bg-(--role-shell-accent) text-(--role-shell-accent-text)" : "text-(--role-shell-text)"}`}
           >
             <Icon size={20} />
@@ -87,6 +89,7 @@ const CashierLayout = () => {
 
         <button
           onClick={() => setShowMore(true)}
+          aria-label="Plus d'options"
           className={`flex h-11 w-11 items-center justify-center rounded-xl transition ${
             links.slice(4).some(({ path }) => active(path))
               ? "bg-(--role-shell-accent) text-(--role-shell-accent-text)"
@@ -122,6 +125,7 @@ const CashierLayout = () => {
                 </h2>
                 <button
                   onClick={() => setShowMore(false)}
+                  aria-label="Fermer"
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-(--role-shell-text)"
                 >
                   <X size={18} />
@@ -179,6 +183,7 @@ const CashierLayout = () => {
 
         <button
           onClick={logout}
+          aria-label="Déconnexion"
           className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-500/20 text-red-300"
         >
           <LogOut size={18} />
@@ -210,6 +215,7 @@ const CashierLayout = () => {
 
           <button
             onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? "Développer le menu" : "Réduire le menu"}
             className="absolute -right-4 top-8 flex h-8 w-8 items-center justify-center rounded-full border border-(--role-shell-border) bg-(--role-shell-bg) text-(--role-shell-text)"
           >
             {collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
@@ -221,6 +227,7 @@ const CashierLayout = () => {
             <button
               key={path}
               onClick={() => navigate(path)}
+              aria-label={label}
               className={`flex items-center rounded-xl transition ${collapsed ? "justify-center py-3" : "gap-4 px-4 py-3"} ${active(path) ? "bg-(--role-shell-accent) text-(--role-shell-accent-text)" : "text-(--role-shell-text)/70 hover:bg-white/10"}`}
             >
               <Icon size={20} />
@@ -232,6 +239,7 @@ const CashierLayout = () => {
 
         <button
           onClick={logout}
+          aria-label="Déconnexion"
           className="m-4 flex items-center justify-center gap-3 rounded-xl bg-(--role-shell-accent) py-3 text-(--role-shell-accent-text)"
         >
           <LogOut size={18} />

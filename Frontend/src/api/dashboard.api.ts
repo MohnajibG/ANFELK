@@ -119,3 +119,26 @@ export const getAdminDashboard = async (
 
   return response.data.dashboard;
 };
+
+interface EmployeeSalesBlock {
+  revenue: number;
+  tickets: number;
+}
+
+export interface EmployeeDashboardData {
+  salesToday: EmployeeSalesBlock;
+  salesMonth: EmployeeSalesBlock;
+  clientsServedMonth: number;
+  servicesDoneMonth: { _id: string; count: number }[];
+  evolution: { _id: string; revenue: number }[];
+}
+
+export const getEmployeeDashboard = async (
+  date?: string,
+): Promise<EmployeeDashboardData> => {
+  const response = await api.get("/dashboard", {
+    params: date ? { date } : undefined,
+  });
+
+  return response.data.dashboard;
+};

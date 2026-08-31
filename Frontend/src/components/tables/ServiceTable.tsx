@@ -22,24 +22,28 @@ const Actions = ({
   <div className="flex gap-2">
     <button
       onClick={() => onView(service)}
+      aria-label="Voir la prestation"
       className="rounded-lg bg-(--surface) p-2 transition hover:scale-105"
     >
       <Eye size={16} />
     </button>
     <button
       onClick={() => onEdit(service)}
+      aria-label="Modifier la prestation"
       className="rounded-lg bg-(--black) p-2 text-white transition hover:scale-105"
     >
       <Pencil size={16} />
     </button>
     <button
       onClick={() => onToggle(service)}
+      aria-label={service.isActive ? "Désactiver la prestation" : "Activer la prestation"}
       className="rounded-lg bg-amber-50 p-2 text-amber-700 transition hover:scale-105"
     >
       <Power size={16} />
     </button>
     <button
       onClick={() => onDelete(service)}
+      aria-label="Supprimer la prestation"
       className="rounded-lg bg-red-50 p-2 text-red-600 transition hover:scale-105"
     >
       <Trash2 size={16} />

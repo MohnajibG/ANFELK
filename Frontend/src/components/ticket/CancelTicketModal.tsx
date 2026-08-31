@@ -29,6 +29,7 @@ const CancelTicketModal = ({
 
           <button
             onClick={onClose}
+            aria-label="Fermer"
             className="rounded-xl border border-(--border) p-2 hover:bg-(--cream)"
           >
             <X size={18} />

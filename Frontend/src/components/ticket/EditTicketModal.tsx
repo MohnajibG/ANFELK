@@ -331,6 +331,7 @@ const EditTicketModal = ({ ticket, onClose, onSaved }: EditTicketModalProps) => 
 
           <button
             disabled={loading}
+            aria-label="Enregistrer les modifications"
             className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-(--black) py-3 font-semibold text-(--cream) transition hover:bg-(--brown-dark) disabled:opacity-50"
           >
             {loading ? (

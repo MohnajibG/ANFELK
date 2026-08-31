@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 
 import { getClients } from "../../api/client.api";
-import AddClientModal from "../../components/admin/AddClientModal";
+import ClientFormModal from "../../components/admin/ClientFormModal";
+import ClientDetailModal from "../../components/admin/ClientDetailModal";
 
 import PageHeader from "../../components/ui/PageHeader";
 import StatCard from "../../components/ui/StatCard";
@@ -38,6 +39,8 @@ const Clients = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [openModal, setOpenModal] = useState(false);
+  const [editClient, setEditClient] = useState<Client | null>(null);
+  const [viewClient, setViewClient] = useState<Client | null>(null);
 
   const loadClients = useCallback(async () => {
     try {
@@ -192,10 +195,18 @@ const Clients = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--cream) text-(--brown) transition hover:scale-105">
+                  <button
+                    onClick={() => setViewClient(client)}
+                    aria-label="Voir la fiche cliente"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--cream) text-(--brown) transition hover:scale-105"
+                  >
                     <Eye size={17} />
                   </button>
-                  <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--black) text-white transition hover:scale-105">
+                  <button
+                    onClick={() => setEditClient(client)}
+                    aria-label="Modifier la cliente"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--black) text-white transition hover:scale-105"
+                  >
                     <Pencil size={17} />
                   </button>
                 </div>
@@ -205,10 +216,24 @@ const Clients = () => {
         )}
       </section>
 
-      <AddClientModal
+      <ClientFormModal
         open={openModal}
         onClose={() => setOpenModal(false)}
         onSuccess={loadClients}
+      />
+
+      <ClientFormModal
+        key={editClient?._id ?? "edit"}
+        open={Boolean(editClient)}
+        client={editClient}
+        onClose={() => setEditClient(null)}
+        onSuccess={loadClients}
+      />
+
+      <ClientDetailModal
+        open={Boolean(viewClient)}
+        client={viewClient}
+        onClose={() => setViewClient(null)}
       />
     </div>
   );

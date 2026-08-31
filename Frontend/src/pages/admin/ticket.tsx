@@ -170,7 +170,10 @@ const Tickets = () => {
               }
               className="rounded-2xl border border-(--border) bg-white px-4 py-3 text-sm"
             >
+              <option value="all">Tous les paiements</option>
               <option value="cash">Espèces</option>
+              <option value="card">Carte</option>
+              <option value="transfer">Virement</option>
             </select>
           </>
         }
