@@ -216,7 +216,7 @@ const CashierLayout = () => {
           <button
             onClick={() => setCollapsed(!collapsed)}
             aria-label={collapsed ? "Développer le menu" : "Réduire le menu"}
-            className="absolute -right-4 top-8 flex h-8 w-8 items-center justify-center rounded-full border border-(--role-shell-border) bg-(--role-shell-bg) text-(--role-shell-text)"
+            className="absolute -right-10 top-10 flex h-8 w-8 items-center justify-center rounded-full border border-(--role-shell-border) bg-(--role-shell-bg) text-(--role-shell-text)"
           >
             {collapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
           </button>

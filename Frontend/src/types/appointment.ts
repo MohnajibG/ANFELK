@@ -54,6 +54,7 @@ export interface Appointment {
   source: AppointmentSource;
   notes?: string;
   noShowReason?: string;
+  cancelReason?: string;
   createdBy: string | AppointmentEmployee;
   recurrenceGroupId?: string;
   createdAt: string;

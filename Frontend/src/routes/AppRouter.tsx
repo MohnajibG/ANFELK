@@ -18,6 +18,7 @@ import EmployeeLayout from "../layouts/EmployeeLayout";
 import Dashboard from "../pages/admin/Dashboard";
 import Clients from "../pages/admin/Clients";
 import Employees from "../pages/admin/Employees";
+import EmployeeDetails from "../components/employees/EmployeeDetails";
 import Categories from "../pages/admin/Categories";
 import Services from "../pages/admin/Services";
 import Appointments from "../pages/Appointments";
@@ -78,6 +79,7 @@ const AppRouter = () => {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="clients" element={<Clients />} />
             <Route path="employees" element={<Employees />} />
+            <Route path="employees/:id" element={<EmployeeDetails />} />
             <Route path="categories" element={<Categories />} />
             <Route path="cash-register" element={<CashRegisterHistory />} />
             <Route path="services" element={<Services />} />

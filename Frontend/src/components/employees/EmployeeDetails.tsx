@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -9,50 +9,55 @@ import {
   CalendarDays,
   Wallet,
   TrendingUp,
+  Users,
+  Receipt,
   Clock,
-  Award,
-  Star,
-  User,
 } from "lucide-react";
 
 import { getEmployeeById } from "../../api/employee.api";
+import {
+  getEmployeeStats,
+  type EmployeeDetailStats,
+} from "../../api/dashboard.api";
 
 import Alert from "../ui/Alert";
 import LoadingState from "../ui/LoadingState";
 
 import type { Employee } from "../../types/employee";
 
-const recentServices = [
-  {
-    client: "Emma Martin",
-    service: "Coloration cheveux",
-    price: "120 DA",
-    date: "Aujourd'hui • 10:30",
-  },
-  {
-    client: "Julie Martin",
-    service: "Coupe cheveux",
-    price: "40 DA",
-    date: "Aujourd'hui • 09:00",
-  },
-  {
-    client: "Sarah Lopez",
-    service: "Brushing",
-    price: "25 DA",
-    date: "Hier",
-  },
-];
+type Period = "day" | "week" | "month";
+
+const PERIOD_LABELS: Record<Period, string> = {
+  day: "Jour",
+  week: "Semaine",
+  month: "Mois",
+};
+
+const statusLabels: Record<string, string> = {
+  pending: "En attente",
+  confirmed: "Confirmé",
+  in_progress: "En cours",
+  completed: "Terminé",
+  waiting_payment: "Paiement attendu",
+  paid: "Payé",
+  cancelled: "Annulé",
+  no_show: "Absent",
+};
+
+const moneyFormat = new Intl.NumberFormat("fr-FR");
 
 const EmployeeDetails = () => {
   const { id } = useParams();
-
   const navigate = useNavigate();
 
   const [employee, setEmployee] = useState<Employee | null>(null);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
+
+  const [period, setPeriod] = useState<Period>("month");
+  const [stats, setStats] = useState<EmployeeDetailStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -64,9 +69,8 @@ const EmployeeDetails = () => {
         const data = await getEmployeeById(id);
 
         setEmployee(data);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        setError(error.message || "Employé introuvable");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Employé introuvable");
       } finally {
         setLoading(false);
       }
@@ -74,6 +78,32 @@ const EmployeeDetails = () => {
 
     load();
   }, [id]);
+
+  const loadStats = useCallback(async () => {
+    if (!id) return;
+
+    try {
+      setStatsLoading(true);
+      setStatsError("");
+
+      const data = await getEmployeeStats(id, { period });
+
+      setStats(data);
+    } catch (err) {
+      setStatsError(
+        err instanceof Error
+          ? err.message
+          : "Impossible de charger les statistiques",
+      );
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [id, period]);
+
+  useEffect(() => {
+    const timer = setTimeout(loadStats, 0);
+    return () => clearTimeout(timer);
+  }, [loadStats]);
 
   if (loading) {
     return (
@@ -84,16 +114,19 @@ const EmployeeDetails = () => {
   }
 
   if (error || !employee) {
-    return (
-      <Alert variant="danger">{error || "Employé introuvable"}</Alert>
-    );
+    return <Alert variant="danger">{error || "Employé introuvable"}</Alert>;
   }
+
+  const maxEvolution = Math.max(
+    1,
+    ...(stats?.evolution.map((point) => point.revenue) ?? [1]),
+  );
 
   return (
     <div className="w-full space-y-6">
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm border border-(--border)"
+        className="flex items-center gap-2 rounded-xl border border-(--border) bg-white px-4 py-3 text-sm"
       >
         <ArrowLeft size={18} />
         Retour
@@ -103,19 +136,17 @@ const EmployeeDetails = () => {
 
       <section className="flex flex-col gap-8 rounded-3xl border border-(--border) bg-white p-6 lg:flex-row">
         <div className="flex flex-col items-center">
-          <div className="flex h-36 w-36 items-center justify-center rounded-full bg-(--cream) text-(--brown)">
-            <User size={55} />
+          <div className="flex h-36 w-36 items-center justify-center rounded-full bg-(--cream) font-title text-4xl font-bold text-(--brown)">
+            {employee.firstName?.charAt(0)}
+            {employee.lastName?.charAt(0)}
           </div>
 
           <span
-            className={`
-            mt-5 rounded-full px-4 py-2 text-sm font-semibold
-            ${
+            className={`mt-5 rounded-full px-4 py-2 text-sm font-semibold ${
               employee.isActive
                 ? "bg-green-100 text-green-700"
                 : "bg-red-100 text-red-700"
-            }
-            `}
+            }`}
           >
             {employee.isActive ? "Actif" : "Inactif"}
           </span>
@@ -174,92 +205,183 @@ const EmployeeDetails = () => {
         </div>
       </section>
 
-      {/* STATS */}
+      {/* SELECTEUR PERIODE */}
 
-      <section className="flex flex-wrap gap-4">
-        <div className="w-full *:h-full md:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
-          <Card title="Chiffre généré" value="0 DA" icon={<Wallet />} />
-        </div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Statistiques</h2>
 
-        <div className="w-full *:h-full md:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
-          <Card title="Rendez-vous" value="0" icon={<CalendarDays />} />
-        </div>
-
-        <div className="w-full *:h-full md:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
-          <Card title="Panier moyen" value="0 DA" icon={<TrendingUp />} />
-        </div>
-
-        <div className="w-full *:h-full md:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
-          <Card title="Heures" value="0 h" icon={<Clock />} />
-        </div>
-      </section>
-
-      {/* PERFORMANCE */}
-
-      <section className="flex flex-wrap gap-6">
-        <motion.div
-          whileHover={{
-            scale: 1.01,
-          }}
-          className="w-full rounded-3xl border border-(--border) bg-white p-6 lg:w-[calc(66.667%-8px)]"
-        >
-          <h2 className="mb-6 text-xl font-semibold">Evolution mensuelle</h2>
-
-          <div className="flex h-64 items-end gap-4 rounded-3xl bg-(--cream) p-6">
-            {[40, 55, 65, 70, 60, 85, 90].map((height, index) => (
-              <div
-                key={index}
-                className="flex-1 rounded-full bg-(--brown)"
-                style={{
-                  height: `${height}%`,
-                }}
-              />
-            ))}
-          </div>
-        </motion.div>
-
-        <div className="w-full rounded-3xl border border-(--border) bg-white p-6 lg:w-[calc(33.333%-16px)]">
-          <h2 className="mb-5 text-xl font-semibold">Performance</h2>
-
-          <div className="space-y-4">
-            <Stat icon={<Award />} title="Meilleure employée" value="0 fois" />
-
-            <Stat icon={<Star />} title="Note clientes" value="N/A" />
-
-            <Stat icon={<Scissors />} title="Service préféré" value="N/A" />
-          </div>
-        </div>
-      </section>
-
-      {/* HISTORIQUE */}
-
-      <section className="rounded-3xl border border-(--border) bg-white p-6">
-        <h2 className="mb-6 text-xl font-semibold">Dernières prestations</h2>
-
-        <div className="space-y-4">
-          {recentServices.map((service) => (
-            <motion.div
-              key={service.client}
-              whileHover={{
-                x: 5,
-              }}
-              className="flex flex-col gap-3 rounded-2xl border border-(--border) bg-(--soft) p-5 sm:flex-row sm:justify-between"
+        <div className="flex rounded-xl border border-(--border) bg-white p-1">
+          {(Object.keys(PERIOD_LABELS) as Period[]).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setPeriod(key)}
+              className={`rounded-lg px-4 py-2 text-sm transition ${
+                period === key
+                  ? "bg-(--black) text-(--cream)"
+                  : "text-(--muted)"
+              }`}
             >
-              <div>
-                <p className="font-semibold">{service.client}</p>
-
-                <p className="text-sm text-(--muted)">{service.service}</p>
-              </div>
-
-              <div className="sm:text-right">
-                <p className="font-bold text-(--brown)">{service.price}</p>
-
-                <p className="text-xs text-(--muted)">{service.date}</p>
-              </div>
-            </motion.div>
+              {PERIOD_LABELS[key]}
+            </button>
           ))}
         </div>
-      </section>
+      </div>
+
+      {statsError && <Alert variant="danger">{statsError}</Alert>}
+
+      {statsLoading || !stats ? (
+        <div className="rounded-3xl border border-(--border) bg-white p-10">
+          <LoadingState />
+        </div>
+      ) : (
+        <>
+          {/* STATS */}
+
+          <section className="flex flex-wrap gap-4">
+            <div className="w-full *:h-full md:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
+              <Card
+                title="Chiffre généré"
+                value={`${moneyFormat.format(stats.revenue.current)} DA`}
+                change={stats.revenue.change}
+                icon={<Wallet />}
+              />
+            </div>
+
+            <div className="w-full *:h-full md:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
+              <Card
+                title="Prestations"
+                value={String(stats.tickets.current)}
+                change={stats.tickets.change}
+                icon={<Receipt />}
+              />
+            </div>
+
+            <div className="w-full *:h-full md:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
+              <Card
+                title="Panier moyen"
+                value={`${moneyFormat.format(stats.averageBasket)} DA`}
+                icon={<TrendingUp />}
+              />
+            </div>
+
+            <div className="w-full *:h-full md:w-[calc(50%-8px)] xl:w-[calc(25%-12px)]">
+              <Card
+                title="Clientes servies"
+                value={String(stats.clientsServed)}
+                icon={<Users />}
+              />
+            </div>
+          </section>
+
+          {/* PERFORMANCE */}
+
+          <section className="flex flex-wrap gap-6">
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              className="w-full rounded-3xl border border-(--border) bg-white p-6 lg:w-[calc(66.667%-8px)]"
+            >
+              <h2 className="mb-6 text-xl font-semibold">
+                Évolution du chiffre d'affaires
+              </h2>
+
+              {stats.evolution.length === 0 ? (
+                <p className="flex h-64 items-center justify-center rounded-3xl bg-(--cream) text-sm text-(--muted)">
+                  Aucune vente sur cette période
+                </p>
+              ) : (
+                <div className="flex h-64 items-end gap-2 rounded-3xl bg-(--cream) p-6">
+                  {stats.evolution.map((point) => (
+                    <div
+                      key={point._id}
+                      title={`${point._id} · ${moneyFormat.format(point.revenue)} DA`}
+                      className="flex-1 rounded-full bg-(--brown)"
+                      style={{
+                        height: `${Math.max(4, (point.revenue / maxEvolution) * 100)}%`,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+
+            <div className="w-full rounded-3xl border border-(--border) bg-white p-6 lg:w-[calc(33.333%-16px)]">
+              <h2 className="mb-5 text-xl font-semibold">Prestations réalisées</h2>
+
+              {stats.servicesBreakdown.length === 0 ? (
+                <p className="text-sm text-(--muted)">
+                  Aucune prestation sur cette période
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {stats.servicesBreakdown.map((service) => (
+                    <Stat
+                      key={service._id}
+                      icon={<Scissors />}
+                      title={service._id}
+                      value={`${service.count} fois`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* PLANNING */}
+
+          <section className="rounded-3xl border border-(--border) bg-white p-6">
+            <h2 className="mb-6 text-xl font-semibold">
+              Planning — prochains rendez-vous
+            </h2>
+
+            {stats.upcomingAppointments.length === 0 ? (
+              <p className="text-sm text-(--muted)">
+                Aucun rendez-vous à venir
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {stats.upcomingAppointments.map((appointment) => {
+                  const client =
+                    typeof appointment.client === "string"
+                      ? ""
+                      : `${appointment.client.firstName} ${appointment.client.lastName}`;
+
+                  return (
+                    <motion.div
+                      key={appointment._id}
+                      whileHover={{ x: 5 }}
+                      className="flex flex-col gap-3 rounded-2xl border border-(--border) bg-(--surface) p-5 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div>
+                        <p className="font-semibold">{client}</p>
+
+                        <p className="text-sm text-(--muted)">
+                          {appointment.services
+                            .map((service) => service.name)
+                            .join(", ")}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3 sm:text-right">
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-(--muted)">
+                          {statusLabels[appointment.status] ??
+                            appointment.status}
+                        </span>
+
+                        <div className="flex items-center gap-2 text-sm text-(--muted)">
+                          <Clock size={14} />
+                          {appointment.date.slice(0, 10)} ·{" "}
+                          {appointment.startTime}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 };
@@ -267,10 +389,12 @@ const EmployeeDetails = () => {
 const Card = ({
   title,
   value,
+  change,
   icon,
 }: {
   title: string;
   value: string;
+  change?: number;
   icon: React.ReactNode;
 }) => {
   return (
@@ -283,6 +407,17 @@ const Card = ({
           <p className="text-sm text-(--muted)">{title}</p>
 
           <h3 className="mt-2 text-3xl font-bold">{value}</h3>
+
+          {change !== undefined && (
+            <p
+              className={`mt-1 text-xs font-semibold ${
+                change >= 0 ? "text-emerald-600" : "text-red-600"
+              }`}
+            >
+              {change >= 0 ? "+" : ""}
+              {change}% vs période précédente
+            </p>
+          )}
         </div>
 
         <div className="rounded-xl bg-(--cream) p-3 text-(--brown)">{icon}</div>
@@ -323,7 +458,7 @@ const Stat = ({
   value: string;
 }) => {
   return (
-    <div className="flex items-center gap-4 rounded-2xl bg-(--soft) p-4">
+    <div className="flex items-center gap-4 rounded-2xl bg-(--surface) p-4">
       <div className="rounded-xl bg-(--cream) p-3 text-(--brown)">{icon}</div>
 
       <div>

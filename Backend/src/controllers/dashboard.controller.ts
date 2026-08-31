@@ -6,6 +6,7 @@ import {
   getAdminDashboard,
   getCashierDashboard,
   getEmployeeDashboard,
+  getEmployeeDetailStats,
 } from "../services/dashboard.service";
 import { sendInternalError } from "../utils/apiError";
 
@@ -67,5 +68,31 @@ export const getDashboardController = async (
     });
   } catch (error: unknown) {
     return sendInternalError(res, error, "GET_DASHBOARD_ERROR");
+  }
+};
+
+/**
+ * Détail admin d'un employé (chiffre d'affaires, prestations, planning)
+ */
+export const getEmployeeStatsController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    const { period, date, startDate, endDate } = req.query;
+
+    const stats = await getEmployeeDetailStats(req.params.id as string, {
+      period: typeof period === "string" ? period : undefined,
+      date: typeof date === "string" ? date : undefined,
+      startDate: typeof startDate === "string" ? startDate : undefined,
+      endDate: typeof endDate === "string" ? endDate : undefined,
+    });
+
+    return res.status(200).json({
+      success: true,
+      stats,
+    });
+  } catch (error: unknown) {
+    return sendInternalError(res, error, "GET_EMPLOYEE_STATS_ERROR");
   }
 };

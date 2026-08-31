@@ -45,6 +45,8 @@ export interface IAppointment extends Document {
 
   noShowReason?: string;
 
+  cancelReason?: string;
+
   createdBy: Types.ObjectId;
 
   updatedBy?: Types.ObjectId;
@@ -157,6 +159,12 @@ const appointmentSchema = new Schema<IAppointment>(
     },
 
     noShowReason: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    cancelReason: {
       type: String,
       default: "",
       trim: true,

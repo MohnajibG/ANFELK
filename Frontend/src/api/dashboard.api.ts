@@ -142,3 +142,43 @@ export const getEmployeeDashboard = async (
 
   return response.data.dashboard;
 };
+
+interface EmployeeStatsSalesBlock {
+  current: number;
+  previous: number;
+  change: number;
+}
+
+export interface EmployeeAppointmentSummary {
+  _id: string;
+  date: string;
+  startTime: string;
+  status: string;
+  services: { name: string; price: number }[];
+  client:
+    | string
+    | { _id: string; firstName: string; lastName: string; phone?: string };
+}
+
+export interface EmployeeDetailStats {
+  range: { start: string; end: string };
+  revenue: EmployeeStatsSalesBlock;
+  tickets: EmployeeStatsSalesBlock;
+  averageBasket: number;
+  clientsServed: number;
+  servicesBreakdown: { _id: string; count: number; revenue: number }[];
+  evolution: { _id: string; revenue: number }[];
+  appointmentsInRange: number;
+  upcomingAppointments: EmployeeAppointmentSummary[];
+}
+
+export const getEmployeeStats = async (
+  employeeId: string,
+  filters: Pick<DashboardFilters, "period" | "date">,
+): Promise<EmployeeDetailStats> => {
+  const response = await api.get(`/dashboard/employee/${employeeId}`, {
+    params: filters,
+  });
+
+  return response.data.stats;
+};

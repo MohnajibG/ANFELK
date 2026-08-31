@@ -67,9 +67,12 @@ export const updateAppointment = async (
   }
 };
 
-export const cancelAppointment = async (id: string): Promise<Appointment> => {
+export const cancelAppointment = async (
+  id: string,
+  reason?: string,
+): Promise<Appointment> => {
   try {
-    const { data } = await api.patch(`${API_URL}/${id}/cancel`);
+    const { data } = await api.patch(`${API_URL}/${id}/cancel`, { reason });
     return data.appointment;
   } catch (error) {
     console.error("[Appointments] cancelAppointment:", error);

@@ -6,11 +6,12 @@ import {
   WalletCards,
   Star,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { getClients } from "../../api/client.api";
 import Alert from "../../components/ui/Alert";
 import LoadingState from "../../components/ui/LoadingState";
+import ClientFormModal from "../../components/admin/ClientFormModal";
 import type { Client } from "../../types/client";
 
 const Customers = () => {
@@ -18,22 +19,24 @@ const Customers = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const data = await getClients();
+      setClients(Array.isArray(data) ? data : (data.clients ?? []));
+    } catch (error) {
+      console.error("[Customers]", error);
+      setError("Impossible de charger les clientes.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await getClients();
-        setClients(Array.isArray(data) ? data : (data.clients ?? []));
-      } catch (error) {
-        console.error("[Customers]", error);
-        setError("Impossible de charger les clientes.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
-  }, []);
+    const timer = setTimeout(load, 0);
+    return () => clearTimeout(timer);
+  }, [load]);
 
   const filteredClients = useMemo(
     () =>
@@ -56,7 +59,10 @@ const Customers = () => {
           <p className="ak-muted mt-2">Gestion des clientes du salon</p>
         </div>
 
-        <button className="flex items-center justify-center gap-2 rounded-xl bg-(--black) px-5 py-3 text-(--cream) transition hover:bg-(--brown-dark)">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center justify-center gap-2 rounded-xl bg-(--black) px-5 py-3 text-(--cream) transition hover:bg-(--brown-dark)"
+        >
           <UserPlus size={18} />
           Nouvelle cliente
         </button>
@@ -132,6 +138,12 @@ const Customers = () => {
           </motion.article>
         ))}
       </div>
+
+      <ClientFormModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={load}
+      />
     </div>
   );
 };

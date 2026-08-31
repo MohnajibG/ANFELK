@@ -41,3 +41,7 @@ export const rescheduleAppointmentSchema = z.object({
   date: zDate,
   startTime: timeString,
 });
+
+export const cancelAppointmentSchema = z.object({
+  reason: z.string().trim().optional(),
+});

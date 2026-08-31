@@ -210,6 +210,7 @@ export const cancelAppointmentController = async (
     const appointment = await cancelAppointment(
       req.params.id as string,
       req.user!.id,
+      req.body?.reason,
     );
 
     if (!appointment) {

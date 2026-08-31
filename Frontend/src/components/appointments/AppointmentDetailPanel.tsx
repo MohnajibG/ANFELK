@@ -10,6 +10,7 @@ import {
   cancelRecurrenceSeries,
 } from "../../api/appointment.api";
 import ConfirmModal from "../ui/ConfirmModal";
+import AppointmentReasonModal from "./AppointmentReasonModal";
 
 import type { Appointment, AppointmentStatus } from "../../types/appointment";
 
@@ -51,9 +52,11 @@ const AppointmentDetailPanel = ({
   );
   const [saving, setSaving] = useState(false);
   const [confirmType, setConfirmType] = useState<
-    "cancel" | "cancelSeries" | "delete" | null
+    "cancelSeries" | "delete" | null
   >(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   const clientLabel =
     typeof appointment.client === "string"
@@ -85,14 +88,17 @@ const AppointmentDetailPanel = ({
     }
   };
 
-  const handleCancel = async () => {
+  const handleCancel = async (reason: string) => {
     try {
-      await cancelAppointment(appointment._id);
+      setCancelLoading(true);
+      await cancelAppointment(appointment._id, reason || undefined);
       toast.success("Rendez-vous annulé");
       onChanged();
       onClose();
     } catch (err) {
       toast.error(getErrorMessage(err, "Impossible d'annuler ce rendez-vous"));
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -128,8 +134,7 @@ const AppointmentDetailPanel = ({
     try {
       setConfirmLoading(true);
 
-      if (confirmType === "cancel") await handleCancel();
-      else if (confirmType === "cancelSeries") await handleCancelSeries();
+      if (confirmType === "cancelSeries") await handleCancelSeries();
       else await handleDelete();
     } finally {
       setConfirmLoading(false);
@@ -138,14 +143,9 @@ const AppointmentDetailPanel = ({
   };
 
   const confirmContent: Record<
-    "cancel" | "cancelSeries" | "delete",
+    "cancelSeries" | "delete",
     { title: string; description: string; confirmLabel: string }
   > = {
-    cancel: {
-      title: "Annuler ce rendez-vous ?",
-      description: "Le créneau sera libéré.",
-      confirmLabel: "Annuler le rendez-vous",
-    },
     cancelSeries: {
       title: "Annuler toute la série ?",
       description:
@@ -284,7 +284,7 @@ const AppointmentDetailPanel = ({
             </button>
 
             <button
-              onClick={() => setConfirmType("cancel")}
+              onClick={() => setCancelling(true)}
               className="rounded-2xl bg-red-100 px-5 py-3 text-red-700"
             >
               Annuler le rdv
@@ -319,6 +319,19 @@ const AppointmentDetailPanel = ({
         loading={confirmLoading}
         onConfirm={runConfirmedAction}
         onCancel={() => setConfirmType(null)}
+      />
+
+      <AppointmentReasonModal
+        key={cancelling ? "open" : "closed"}
+        open={cancelling}
+        title="Annuler ce rendez-vous ?"
+        description="Le créneau sera libéré."
+        reasonLabel="Motif de l'annulation (optionnel)"
+        reasonPlaceholder="Ex : cliente indisponible, changement d'horaire..."
+        confirmLabel="Annuler le rendez-vous"
+        loading={cancelLoading}
+        onConfirm={handleCancel}
+        onCancel={() => setCancelling(false)}
       />
     </div>
   );

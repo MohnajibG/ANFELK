@@ -633,3 +633,107 @@ export const getEmployeeDashboard = async (
     evolution,
   };
 };
+
+/**
+ * Détail admin d'un employé : chiffre d'affaires, prestations et
+ * planning sur une période choisie (jour / semaine / mois / année /
+ * personnalisée), avec comparaison à la période précédente.
+ */
+export const getEmployeeDetailStats = async (
+  employeeId: string,
+  filters: DashboardFilters = {},
+) => {
+  const empId = new mongoose.Types.ObjectId(employeeId);
+
+  const range = getRange(filters);
+  const previousRange = getPreviousRange(range);
+
+  const [current, previous] = await Promise.all([
+    getSalesForEmployeeInRange(range, empId),
+    getSalesForEmployeeInRange(previousRange, empId),
+  ]);
+
+  const clientsServed = await Ticket.distinct("client", {
+    "items.employee": empId,
+    status: "paid",
+    createdAt: { $gte: range.start, $lte: range.end },
+  });
+
+  const servicesBreakdown = await Ticket.aggregate([
+    {
+      $match: {
+        "items.employee": empId,
+        status: "paid",
+        createdAt: { $gte: range.start, $lte: range.end },
+      },
+    },
+    { $unwind: "$items" },
+    { $match: { "items.employee": empId } },
+    {
+      $group: {
+        _id: "$items.name",
+        count: { $sum: 1 },
+        revenue: { $sum: "$items.finalPrice" },
+      },
+    },
+    { $sort: { count: -1 } },
+    { $limit: 8 },
+  ]);
+
+  const evolution = await Ticket.aggregate([
+    {
+      $match: {
+        "items.employee": empId,
+        status: "paid",
+        createdAt: { $gte: range.start, $lte: range.end },
+      },
+    },
+    { $unwind: "$items" },
+    { $match: { "items.employee": empId } },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+        revenue: { $sum: "$items.finalPrice" },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
+
+  const appointmentsInRange = await Appointment.countDocuments({
+    "services.employee": empId,
+    date: { $gte: range.start, $lte: range.end },
+    status: { $ne: "cancelled" },
+  });
+
+  const upcomingAppointments = await Appointment.find({
+    "services.employee": empId,
+    date: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+    status: { $in: ["pending", "confirmed"] },
+  })
+    .sort({ date: 1, startTime: 1 })
+    .limit(10)
+    .populate("client", "firstName lastName phone");
+
+  const averageBasket =
+    current.tickets > 0 ? Math.round(current.revenue / current.tickets) : 0;
+
+  return {
+    range,
+    revenue: {
+      current: current.revenue,
+      previous: previous.revenue,
+      change: percentChange(current.revenue, previous.revenue),
+    },
+    tickets: {
+      current: current.tickets,
+      previous: previous.tickets,
+      change: percentChange(current.tickets, previous.tickets),
+    },
+    averageBasket,
+    clientsServed: clientsServed.length,
+    servicesBreakdown,
+    evolution,
+    appointmentsInRange,
+    upcomingAppointments,
+  };
+};

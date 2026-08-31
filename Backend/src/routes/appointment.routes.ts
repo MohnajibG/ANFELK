@@ -27,6 +27,7 @@ import {
   createAppointmentSchema,
   updateAppointmentSchema,
   rescheduleAppointmentSchema,
+  cancelAppointmentSchema,
 } from "../validators/appointment.validator";
 import { createRecurringAppointmentSchema } from "../validators/recurrence.validator";
 
@@ -129,6 +130,7 @@ router.patch(
   "/:id/cancel",
   authenticate,
   authorize("admin", "cashier"),
+  validateBody(cancelAppointmentSchema),
   cancelAppointmentController,
 );
 

@@ -369,11 +369,23 @@ export const deleteAppointment = async (id: string) => {
 /**
  * Annulation
  */
-export const cancelAppointment = async (id: string, userId: string) => {
+export const cancelAppointment = async (
+  id: string,
+  userId: string,
+  reason?: string,
+) => {
   const existing = await Appointment.findById(id);
 
   if (!existing) {
     return null;
+  }
+
+  if (
+    ["cancelled", "no_show", "completed", "paid", "waiting_payment"].includes(
+      existing.status,
+    )
+  ) {
+    throw new Error("Ce rendez-vous ne peut plus être annulé");
   }
 
   const previousStatus = existing.status;
@@ -384,6 +396,7 @@ export const cancelAppointment = async (id: string, userId: string) => {
       status: "cancelled",
       cancelledBy: userId,
       cancelledAt: new Date(),
+      ...(reason !== undefined && { cancelReason: reason }),
     },
     {
       new: true,

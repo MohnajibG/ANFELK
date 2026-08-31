@@ -11,6 +11,7 @@ import {
   List,
   CalendarRange,
   Plus,
+  UserX,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -28,6 +29,7 @@ import type { Appointment, AppointmentStatus } from "../types/appointment";
 
 import AppointmentForm from "../components/appointments/AppointmentForm";
 import AppointmentDetailPanel from "../components/appointments/AppointmentDetailPanel";
+import AppointmentReasonModal from "../components/appointments/AppointmentReasonModal";
 import CalendarView from "../components/calendar/CalendarView";
 import ConfirmModal from "../components/ui/ConfirmModal";
 import LoadingState from "../components/ui/LoadingState";
@@ -61,6 +63,14 @@ const statusStyle: Record<AppointmentStatus, string> = {
 };
 
 const moneyFormat = new Intl.NumberFormat("fr-FR");
+
+// Une fois annulé / absent / facturé / terminé, le rendez-vous est figé :
+// seule la suppression reste possible (déjà bloquée côté backend si facturé)
+const isLiveStatus = (status: AppointmentStatus) =>
+  status === "pending" || status === "confirmed" || status === "in_progress";
+
+const canComplete = (status: AppointmentStatus) =>
+  status === "confirmed" || status === "in_progress";
 
 const employeeNames = (appointment: Appointment) => {
   const names = appointment.services.map((service) =>
@@ -101,7 +111,6 @@ const Appointments = () => {
   const canDelete = user?.role === "admin" || user?.role === "cashier";
 
   type PendingAction =
-    | { type: "cancel"; id: string }
     | { type: "cancelSeries"; id: string }
     | { type: "delete"; id: string };
 
@@ -109,6 +118,11 @@ const Appointments = () => {
     null,
   );
   const [confirmLoading, setConfirmLoading] = useState(false);
+
+  type ReasonAction = { type: "cancel" | "noShow"; id: string };
+
+  const [reasonAction, setReasonAction] = useState<ReasonAction | null>(null);
+  const [reasonLoading, setReasonLoading] = useState(false);
 
   const refreshAppointments = useCallback(async () => {
     try {
@@ -205,11 +219,11 @@ const Appointments = () => {
     }
   };
 
-  const handleCancel = async (id: string) => {
+  const handleCancel = async (id: string, reason?: string) => {
     const target = appointments.find((appointment) => appointment._id === id);
 
     try {
-      await cancelAppointment(id);
+      await cancelAppointment(id, reason);
 
       setAppointments((current) =>
         current.map((appointment) =>
@@ -255,6 +269,23 @@ const Appointments = () => {
     }
   };
 
+  const handleNoShow = async (id: string, reason: string) => {
+    try {
+      await updateAppointment(id, { status: "no_show", noShowReason: reason });
+
+      setAppointments((current) =>
+        current.map((appointment) =>
+          appointment._id === id
+            ? { ...appointment, status: "no_show", noShowReason: reason }
+            : appointment,
+        ),
+      );
+    } catch (error) {
+      console.error("Erreur marquage absence:", error);
+      toast.error("Impossible de marquer le client absent");
+    }
+  };
+
   const handleCancelSeries = async (recurrenceGroupId: string) => {
     try {
       const cancelled = await cancelRecurrenceSeries(recurrenceGroupId);
@@ -294,9 +325,7 @@ const Appointments = () => {
     try {
       setConfirmLoading(true);
 
-      if (confirmAction.type === "cancel") {
-        await handleCancel(confirmAction.id);
-      } else if (confirmAction.type === "cancelSeries") {
+      if (confirmAction.type === "cancelSeries") {
         await handleCancelSeries(confirmAction.id);
       } else {
         await handleDelete(confirmAction.id);
@@ -312,20 +341,61 @@ const Appointments = () => {
     PendingAction["type"],
     { title: string; description: string; confirmLabel: string }
   > = {
-    cancel: {
-      title: "Annuler ce rendez-vous ?",
-      description: "Le client sera notifié que son créneau est libéré.",
-      confirmLabel: "Annuler le rendez-vous",
-    },
     cancelSeries: {
       title: "Annuler toute la série ?",
-      description: "Toutes les prochaines occurrences de ce rendez-vous récurrent seront annulées.",
+      description:
+        "Toutes les prochaines occurrences de ce rendez-vous récurrent seront annulées.",
       confirmLabel: "Annuler la série",
     },
     delete: {
       title: "Supprimer définitivement ce rendez-vous ?",
       description: "Cette action est irréversible.",
       confirmLabel: "Supprimer",
+    },
+  };
+
+  const runReasonAction = async (reason: string) => {
+    if (!reasonAction) return;
+
+    try {
+      setReasonLoading(true);
+
+      if (reasonAction.type === "cancel") {
+        await handleCancel(reasonAction.id, reason || undefined);
+      } else {
+        await handleNoShow(reasonAction.id, reason);
+      }
+
+      setReasonAction(null);
+    } finally {
+      setReasonLoading(false);
+    }
+  };
+
+  const reasonModalContent: Record<
+    ReasonAction["type"],
+    {
+      title: string;
+      description: string;
+      reasonLabel: string;
+      reasonPlaceholder: string;
+      confirmLabel: string;
+    }
+  > = {
+    cancel: {
+      title: "Annuler ce rendez-vous",
+      description: "Le client sera notifié que son créneau est libéré.",
+      reasonLabel: "Motif de l'annulation (optionnel)",
+      reasonPlaceholder: "Ex : cliente indisponible, changement d'horaire...",
+      confirmLabel: "Annuler",
+    },
+    noShow: {
+      title: "Marquer le client absent",
+      description:
+        "Ceci sera comptabilisé dans le suivi de fiabilité de la cliente.",
+      reasonLabel: "Motif de l'absence (optionnel)",
+      reasonPlaceholder: "Ex : aucune nouvelle, absence non justifiée...",
+      confirmLabel: "Marquer absent",
     },
   };
 
@@ -466,7 +536,8 @@ const Appointments = () => {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-(--black)">
-                          {appointment.date.slice(0, 10)} · {appointment.startTime}
+                          {appointment.date.slice(0, 10)} ·{" "}
+                          {appointment.startTime}
                         </p>
                         <p className="mt-1 text-sm text-stone-600">
                           {typeof appointment.client !== "string" &&
@@ -511,39 +582,62 @@ const Appointments = () => {
                       {(appointment.status === "pending" ||
                         appointment.status === "confirmed") && (
                         <button
-                          title="Confirmer"
+                          aria-label="Confirmer"
                           onClick={() =>
                             changeStatus(appointment._id, "confirmed")
                           }
-                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700"
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"
                         >
                           <Check size={15} />
                         </button>
                       )}
 
-                      <button
-                        title="Terminer"
-                        onClick={() =>
-                          changeStatus(appointment._id, "completed")
-                        }
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700"
-                      >
-                        <CircleCheck size={15} />
-                      </button>
+                      {canComplete(appointment.status) && (
+                        <button
+                          aria-label="Terminer"
+                          onClick={() =>
+                            changeStatus(appointment._id, "completed")
+                          }
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700"
+                        >
+                          <CircleCheck size={15} />
+                        </button>
+                      )}
 
-                      <button
-                        title="Annuler"
-                        onClick={() =>
-                          setConfirmAction({ type: "cancel", id: appointment._id })
-                        }
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-700"
-                      >
-                        <X size={15} />
-                      </button>
+                      {isLiveStatus(appointment.status) && (
+                        <button
+                          aria-label="Annuler"
+                          onClick={() =>
+                            setReasonAction({
+                              type: "cancel",
+                              id: appointment._id,
+                            })
+                          }
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-700"
+                        >
+                          <X size={15} />
+                        </button>
+                      )}
+
+                      {(appointment.status === "pending" ||
+                        appointment.status === "confirmed") && (
+                        <button
+                          aria-label="Marquer absent"
+                          onClick={() =>
+                            setReasonAction({
+                              type: "noShow",
+                              id: appointment._id,
+                            })
+                          }
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 text-stone-700"
+                        >
+                          <UserX size={15} />
+                        </button>
+                      )}
 
                       {appointment.recurrenceGroupId && (
                         <button
-                          title="Annuler la série"
+                          aria-label="Annuler la série"
                           onClick={() =>
                             setConfirmAction({
                               type: "cancelSeries",
@@ -558,9 +652,12 @@ const Appointments = () => {
 
                       {canDelete && (
                         <button
-                          title="Supprimer"
+                          aria-label="Supprimer"
                           onClick={() =>
-                            setConfirmAction({ type: "delete", id: appointment._id })
+                            setConfirmAction({
+                              type: "delete",
+                              id: appointment._id,
+                            })
                           }
                           className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 text-stone-700"
                         >
@@ -574,141 +671,167 @@ const Appointments = () => {
 
               {/* DESKTOP : tableau */}
               <div className="hidden overflow-x-auto rounded-3xl border border-(--border) bg-white md:block">
-              <table className="w-full min-w-[860px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-(--border) text-xs uppercase tracking-wide text-stone-500">
-                    <th className="px-4 py-3 font-medium">Date / Heure</th>
-                    <th className="px-4 py-3 font-medium">Client</th>
-                    <th className="px-4 py-3 font-medium">Prestation(s)</th>
-                    <th className="px-4 py-3 font-medium">Employé(s)</th>
-                    <th className="px-4 py-3 font-medium">Prix</th>
-                    <th className="px-4 py-3 font-medium">Statut</th>
-                    <th className="px-4 py-3 font-medium">Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredAppointments.map((appointment) => (
-                    <tr
-                      key={appointment._id}
-                      onClick={() => setSelectedAppointment(appointment)}
-                      className="cursor-pointer border-b border-(--border) last:border-none hover:bg-(--cream)/60"
-                    >
-                      <td className="whitespace-nowrap px-4 py-3">
-                        {appointment.date.slice(0, 10)}
-                        <br />
-                        <span className="text-stone-500">
-                          {appointment.startTime}
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-3">
-                        {typeof appointment.client !== "string" &&
-                          `${appointment.client.firstName} ${appointment.client.lastName}`}
-                      </td>
-
-                      <td className="max-w-56 truncate px-4 py-3">
-                        {appointment.services
-                          .map((service) => service.name)
-                          .join(", ")}
-                      </td>
-
-                      <td className="px-4 py-3">
-                        {employeeNames(appointment)}
-                      </td>
-
-                      <td className="whitespace-nowrap px-4 py-3">
-                        {moneyFormat.format(appointment.estimatedPrice)} DA
-                      </td>
-
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5">
-                          {appointment.recurrenceGroupId && (
-                            <Repeat
-                              size={14}
-                              className="text-stone-400"
-                              aria-label="Série récurrente"
-                            />
-                          )}
-
-                          <span
-                            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${statusStyle[appointment.status]}`}
-                          >
-                            {statusLabels[appointment.status]}
-                          </span>
-                        </div>
-                      </td>
-
-                      <td
-                        className="px-4 py-3"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="flex flex-wrap gap-1.5">
-                          {(appointment.status === "pending" ||
-                            appointment.status === "confirmed") && (
-                            <button
-                              title="Confirmer"
-                              onClick={() =>
-                                changeStatus(appointment._id, "confirmed")
-                              }
-                              className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700"
-                            >
-                              <Check size={15} />
-                            </button>
-                          )}
-
-                          <button
-                            title="Terminer"
-                            onClick={() =>
-                              changeStatus(appointment._id, "completed")
-                            }
-                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700"
-                          >
-                            <CircleCheck size={15} />
-                          </button>
-
-                          <button
-                            title="Annuler"
-                            onClick={() =>
-                          setConfirmAction({ type: "cancel", id: appointment._id })
-                        }
-                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-700"
-                          >
-                            <X size={15} />
-                          </button>
-
-                          {appointment.recurrenceGroupId && (
-                            <button
-                              title="Annuler la série"
-                              onClick={() =>
-                                setConfirmAction({
-                                  type: "cancelSeries",
-                                  id: appointment.recurrenceGroupId!,
-                                })
-                              }
-                              className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-700"
-                            >
-                              <Repeat size={15} />
-                            </button>
-                          )}
-
-                          {canDelete && (
-                            <button
-                              title="Supprimer"
-                              onClick={() =>
-                                setConfirmAction({ type: "delete", id: appointment._id })
-                              }
-                              className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 text-stone-700"
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
+                <table className="w-full min-w-215 text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-(--border) text-xs uppercase tracking-wide text-stone-500">
+                      <th className="px-4 py-3 font-medium">Date / Heure</th>
+                      <th className="px-4 py-3 font-medium">Client</th>
+                      <th className="px-4 py-3 font-medium">Prestation(s)</th>
+                      <th className="px-4 py-3 font-medium">Employé(s)</th>
+                      <th className="px-4 py-3 font-medium">Prix</th>
+                      <th className="px-4 py-3 font-medium">Statut</th>
+                      <th className="px-4 py-3 font-medium">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+
+                  <tbody>
+                    {filteredAppointments.map((appointment) => (
+                      <tr
+                        key={appointment._id}
+                        onClick={() => setSelectedAppointment(appointment)}
+                        className="cursor-pointer border-b border-(--border) last:border-none hover:bg-(--cream)/60"
+                      >
+                        <td className="whitespace-nowrap px-4 py-3">
+                          {appointment.date.slice(0, 10)}
+                          <br />
+                          <span className="text-stone-500">
+                            {appointment.startTime}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-3">
+                          {typeof appointment.client !== "string" &&
+                            `${appointment.client.firstName} ${appointment.client.lastName}`}
+                        </td>
+
+                        <td className="max-w-56 truncate px-4 py-3">
+                          {appointment.services
+                            .map((service) => service.name)
+                            .join(", ")}
+                        </td>
+
+                        <td className="px-4 py-3">
+                          {employeeNames(appointment)}
+                        </td>
+
+                        <td className="whitespace-nowrap px-4 py-3">
+                          {moneyFormat.format(appointment.estimatedPrice)} DA
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            {appointment.recurrenceGroupId && (
+                              <Repeat
+                                size={14}
+                                className="text-stone-400"
+                                aria-label="Série récurrente"
+                              />
+                            )}
+
+                            <span
+                              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${statusStyle[appointment.status]}`}
+                            >
+                              {statusLabels[appointment.status]}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td
+                          className="px-4 py-3"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex flex-wrap gap-1.5">
+                            {(appointment.status === "pending" ||
+                              appointment.status === "confirmed") && (
+                              <button
+                                aria-label="Confirmer"
+                                onClick={() =>
+                                  changeStatus(appointment._id, "confirmed")
+                                }
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"
+                              >
+                                <Check size={15} />
+                              </button>
+                            )}
+
+                            {canComplete(appointment.status) && (
+                              <button
+                                aria-label="Terminer"
+                                onClick={() =>
+                                  changeStatus(appointment._id, "completed")
+                                }
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700"
+                              >
+                                <CircleCheck size={15} />
+                              </button>
+                            )}
+
+                            {isLiveStatus(appointment.status) && (
+                              <button
+                                aria-label="Annuler"
+                                onClick={() =>
+                                  setReasonAction({
+                                    type: "cancel",
+                                    id: appointment._id,
+                                  })
+                                }
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-700"
+                              >
+                                <X size={15} />
+                              </button>
+                            )}
+
+                            {(appointment.status === "pending" ||
+                              appointment.status === "confirmed") && (
+                              <button
+                                aria-label="Marquer absent"
+                                onClick={() =>
+                                  setReasonAction({
+                                    type: "noShow",
+                                    id: appointment._id,
+                                  })
+                                }
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-100 text-stone-700"
+                              >
+                                <UserX size={15} />
+                              </button>
+                            )}
+
+                            {appointment.recurrenceGroupId && (
+                              <button
+                                aria-label="Annuler la série"
+                                onClick={() =>
+                                  setConfirmAction({
+                                    type: "cancelSeries",
+                                    id: appointment.recurrenceGroupId!,
+                                  })
+                                }
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-700"
+                              >
+                                <Repeat size={15} />
+                              </button>
+                            )}
+
+                            {canDelete && (
+                              <button
+                                aria-label="Supprimer"
+                                onClick={() =>
+                                  setConfirmAction({
+                                    type: "delete",
+                                    id: appointment._id,
+                                  })
+                                }
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-100 text-stone-700"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </>
           )}
@@ -717,7 +840,9 @@ const Appointments = () => {
 
       <ConfirmModal
         open={Boolean(confirmAction)}
-        title={confirmAction ? confirmModalContent[confirmAction.type].title : ""}
+        title={
+          confirmAction ? confirmModalContent[confirmAction.type].title : ""
+        }
         description={
           confirmAction
             ? confirmModalContent[confirmAction.type].description
@@ -731,6 +856,37 @@ const Appointments = () => {
         loading={confirmLoading}
         onConfirm={runConfirmedAction}
         onCancel={() => setConfirmAction(null)}
+      />
+
+      <AppointmentReasonModal
+        key={
+          reasonAction ? `${reasonAction.type}-${reasonAction.id}` : "closed"
+        }
+        open={Boolean(reasonAction)}
+        title={reasonAction ? reasonModalContent[reasonAction.type].title : ""}
+        description={
+          reasonAction
+            ? reasonModalContent[reasonAction.type].description
+            : undefined
+        }
+        reasonLabel={
+          reasonAction
+            ? reasonModalContent[reasonAction.type].reasonLabel
+            : undefined
+        }
+        reasonPlaceholder={
+          reasonAction
+            ? reasonModalContent[reasonAction.type].reasonPlaceholder
+            : undefined
+        }
+        confirmLabel={
+          reasonAction
+            ? reasonModalContent[reasonAction.type].confirmLabel
+            : undefined
+        }
+        loading={reasonLoading}
+        onConfirm={runReasonAction}
+        onCancel={() => setReasonAction(null)}
       />
     </section>
   );
