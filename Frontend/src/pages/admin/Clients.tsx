@@ -120,7 +120,7 @@ const Clients = () => {
 
       {error && <Alert variant="danger">{error}</Alert>}
 
-      <section className="overflow-hidden rounded-3xl border border-(--border) bg-white">
+      <section className="rounded-3xl border border-(--border) bg-white">
         {loading ? (
           <LoadingState label="Chargement des clientes..." />
         ) : clients.length === 0 ? (
@@ -137,7 +137,7 @@ const Clients = () => {
               <motion.div
                 key={client._id}
                 whileHover={{ backgroundColor: "var(--surface)" }}
-                className="flex flex-col gap-5 border-b border-(--border) p-5 transition last:border-none lg:flex-row lg:items-center lg:justify-between"
+                className="flex flex-col gap-5 border-b border-(--border) p-5 transition first:rounded-t-3xl last:rounded-b-3xl last:border-none lg:flex-row lg:items-center lg:justify-between"
               >
                 <div className="flex min-w-57.5 items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--black) text-sm font-bold text-(--champagne)">

@@ -78,7 +78,8 @@ const CashRegisterHistory = () => {
   }, []);
 
   useEffect(() => {
-    loadExpenses();
+    const timer = setTimeout(loadExpenses, 0);
+    return () => clearTimeout(timer);
   }, [loadExpenses]);
 
   const [expenseDeleteTarget, setExpenseDeleteTarget] = useState<string | null>(
@@ -152,7 +153,8 @@ const CashRegisterHistory = () => {
   }, [status]);
 
   useEffect(() => {
-    loadHistory();
+    const timer = setTimeout(loadHistory, 0);
+    return () => clearTimeout(timer);
   }, [loadHistory]);
 
   const [cashiers, setCashiers] = useState<Employee[]>([]);

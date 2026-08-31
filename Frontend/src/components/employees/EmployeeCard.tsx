@@ -24,7 +24,7 @@ const EmployeeCard = ({
   return (
     <motion.div
       whileHover={{ backgroundColor: "var(--surface)" }}
-      className="flex flex-col gap-5 border-b border-(--border) p-5 last:border-none lg:flex-row lg:items-center lg:justify-between"
+      className="flex flex-col gap-5 border-b border-(--border) p-5 first:rounded-t-3xl last:rounded-b-3xl last:border-none lg:flex-row lg:items-center lg:justify-between"
     >
       <div className="flex min-w-55 items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--black) text-sm font-bold text-(--champagne)">
@@ -72,7 +72,6 @@ const EmployeeCard = ({
         </button>
         <button
           onClick={() => onSchedule(employee._id)}
-          title="Horaires de travail"
           aria-label="Horaires de travail"
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--cream)"
         >

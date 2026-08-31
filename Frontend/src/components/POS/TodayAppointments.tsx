@@ -7,6 +7,7 @@ import type { Appointment, AppointmentStatus } from "../../types/appointment";
 
 type Props = {
   onSelect: (appointment: Appointment) => void;
+  refreshKey?: number;
 };
 
 const statusLabels: Record<AppointmentStatus, string> = {
@@ -33,7 +34,7 @@ const statusStyle: Record<AppointmentStatus, string> = {
 
 const billableStatuses: AppointmentStatus[] = ["waiting_payment", "completed"];
 
-const TodayAppointments = ({ onSelect }: Props) => {
+const TodayAppointments = ({ onSelect, refreshKey }: Props) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +50,7 @@ const TodayAppointments = ({ onSelect }: Props) => {
       }
     };
     load();
-  }, []);
+  }, [refreshKey]);
 
   if (loading) {
     return (

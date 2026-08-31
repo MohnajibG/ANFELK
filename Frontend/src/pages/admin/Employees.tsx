@@ -105,7 +105,7 @@ const Employees = () => {
 
       <EmployeeStats employees={employees} />
 
-      <section className="overflow-hidden rounded-3xl border border-(--border) bg-white">
+      <section className="rounded-3xl border border-(--border) bg-white">
         {loading ? (
           <LoadingState label="Chargement des employés..." />
         ) : employees.length === 0 ? (

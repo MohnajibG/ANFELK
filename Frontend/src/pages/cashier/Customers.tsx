@@ -12,6 +12,7 @@ import { getClients } from "../../api/client.api";
 import Alert from "../../components/ui/Alert";
 import LoadingState from "../../components/ui/LoadingState";
 import ClientFormModal from "../../components/admin/ClientFormModal";
+import ClientDetailModal from "../../components/admin/ClientDetailModal";
 import type { Client } from "../../types/client";
 
 const Customers = () => {
@@ -20,6 +21,7 @@ const Customers = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [viewClient, setViewClient] = useState<Client | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -132,7 +134,10 @@ const Customers = () => {
               <strong>{client.loyaltyPoints ?? 0}</strong>
             </div>
 
-            <button className="mt-6 w-full rounded-xl border border-(--black) py-3 text-sm font-semibold text-(--black) transition hover:bg-(--black) hover:text-(--cream)">
+            <button
+              onClick={() => setViewClient(client)}
+              className="mt-6 w-full rounded-xl border border-(--black) py-3 text-sm font-semibold text-(--black) transition hover:bg-(--black) hover:text-(--cream)"
+            >
               Voir historique
             </button>
           </motion.article>
@@ -143,6 +148,16 @@ const Customers = () => {
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSuccess={load}
+      />
+
+      <ClientDetailModal
+        open={Boolean(viewClient)}
+        client={
+          viewClient
+            ? { ...viewClient, phone: viewClient.phone ?? "" }
+            : null
+        }
+        onClose={() => setViewClient(null)}
       />
     </div>
   );

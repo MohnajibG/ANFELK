@@ -6,6 +6,7 @@ import { authApi } from "../../api/auth.api";
 
 import Alert from "../../components/ui/Alert";
 import LoadingState from "../../components/ui/LoadingState";
+import ChangePasswordModal from "../../components/settings/ChangePasswordModal";
 
 import type { AuthUser } from "../../types/auth";
 
@@ -13,6 +14,7 @@ const Profile = () => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -107,10 +109,18 @@ const Profile = () => {
 
         <p className="ak-muted mt-2">Gestion du mot de passe du compte.</p>
 
-        <button className="mt-5 rounded-xl bg-(--black) px-5 py-3 text-(--cream) transition hover:bg-(--brown-dark)">
+        <button
+          onClick={() => setShowPasswordModal(true)}
+          className="mt-5 rounded-xl bg-(--black) px-5 py-3 text-(--cream) transition hover:bg-(--brown-dark)"
+        >
           Modifier le mot de passe
         </button>
       </section>
+
+      <ChangePasswordModal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
     </div>
   );
 };

@@ -49,6 +49,8 @@ const usePOS = (options?: UsePOSOptions) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [showCheckoutConfirm, setShowCheckoutConfirm] = useState(false);
+  const [todayRefreshKey, setTodayRefreshKey] = useState(0);
 
   useEffect(() => {
     const load = async () => {
@@ -82,6 +84,17 @@ const usePOS = (options?: UsePOSOptions) => {
 
     load();
   }, []);
+
+  const refreshWaitingAppointments = async () => {
+    try {
+      const appointmentsData = await getWaitingPaymentAppointments();
+      setWaitingAppointments(
+        Array.isArray(appointmentsData) ? appointmentsData : [],
+      );
+    } catch (error) {
+      console.error("[POS] refreshWaitingAppointments:", error);
+    }
+  };
 
   const filteredServices = useMemo(
     () =>
@@ -190,7 +203,7 @@ const usePOS = (options?: UsePOSOptions) => {
     setError("");
   };
 
-  const checkout = async () => {
+  const checkout = () => {
     if (!selectedClient) {
       setError("Veuillez sélectionner un client");
       return;
@@ -206,9 +219,16 @@ const usePOS = (options?: UsePOSOptions) => {
       return;
     }
 
-    if (!window.confirm(`Confirmer l'encaissement de ${total} DA ?`)) {
-      return;
-    }
+    setError("");
+    setShowCheckoutConfirm(true);
+  };
+
+  const cancelCheckout = () => {
+    setShowCheckoutConfirm(false);
+  };
+
+  const confirmCheckout = async () => {
+    if (!selectedClient) return;
 
     try {
       setSaving(true);
@@ -231,6 +251,8 @@ const usePOS = (options?: UsePOSOptions) => {
       await createTicket(payload);
 
       newTicket();
+      await refreshWaitingAppointments();
+      setTodayRefreshKey((key) => key + 1);
       options?.onCheckoutSuccess?.();
     } catch (error) {
       console.error("[POS checkout]", error);
@@ -240,6 +262,7 @@ const usePOS = (options?: UsePOSOptions) => {
       setError(message);
     } finally {
       setSaving(false);
+      setShowCheckoutConfirm(false);
     }
   };
 
@@ -247,6 +270,7 @@ const usePOS = (options?: UsePOSOptions) => {
     services,
     employees,
     waitingAppointments,
+    todayRefreshKey,
 
     selectedAppointment,
 
@@ -280,6 +304,9 @@ const usePOS = (options?: UsePOSOptions) => {
     loadAppointmentToCart,
 
     checkout,
+    showCheckoutConfirm,
+    confirmCheckout,
+    cancelCheckout,
     newTicket,
   };
 };

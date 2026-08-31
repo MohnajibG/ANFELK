@@ -10,13 +10,20 @@ import {
 import { useEffect, useState } from "react";
 
 import { getMyEmployeeProfile } from "../../api/employee.api";
+import { getEmployeeDashboard } from "../../api/dashboard.api";
 
 import LoadingState from "../../components/ui/LoadingState";
+import ChangePasswordModal from "../../components/settings/ChangePasswordModal";
 
 import type { Employee } from "../../types/employee";
 
 const Profile = () => {
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+
+  const [servicesDone, setServicesDone] = useState<number | null>(null);
+  const [revenueMonth, setRevenueMonth] = useState<number | null>(null);
+  const [clientsReceived, setClientsReceived] = useState<number | null>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -29,7 +36,25 @@ const Profile = () => {
       }
     };
 
+    const loadStats = async () => {
+      try {
+        const dashboard = await getEmployeeDashboard();
+
+        setServicesDone(
+          dashboard.servicesDoneMonth.reduce(
+            (total, service) => total + service.count,
+            0,
+          ),
+        );
+        setRevenueMonth(dashboard.salesMonth.revenue);
+        setClientsReceived(dashboard.clientsServedMonth);
+      } catch (error) {
+        console.error("Erreur chargement statistiques profil", error);
+      }
+    };
+
     loadProfile();
+    loadStats();
   }, []);
 
   if (!employee) {
@@ -88,15 +113,28 @@ const Profile = () => {
 
       <div className="flex flex-wrap gap-4">
         <div className="w-full md:w-[calc(33.333%-10.667px)]">
-          <StatCard title="Prestations réalisées" value="-" />
+          <StatCard
+            title="Prestations réalisées"
+            value={servicesDone !== null ? String(servicesDone) : "-"}
+          />
         </div>
 
         <div className="w-full md:w-[calc(33.333%-10.667px)]">
-          <StatCard title="Chiffre du mois" value="-" />
+          <StatCard
+            title="Chiffre du mois"
+            value={
+              revenueMonth !== null
+                ? `${revenueMonth.toLocaleString("fr-FR")} DA`
+                : "-"
+            }
+          />
         </div>
 
         <div className="w-full md:w-[calc(33.333%-10.667px)]">
-          <StatCard title="Clients reçus" value="-" />
+          <StatCard
+            title="Clients reçus"
+            value={clientsReceived !== null ? String(clientsReceived) : "-"}
+          />
         </div>
       </div>
 
@@ -162,13 +200,25 @@ const Profile = () => {
         </motion.div>
       </div>
 
-      {/* ACTION */}
+      {/* SECURITE */}
 
       <div className="rounded-3xl border border-(--border) bg-white p-6 shadow-(--shadow-sm)">
-        <button className="rounded-xl bg-(--black) px-6 py-3 font-semibold text-(--cream) transition hover:bg-(--brown-dark)">
-          Modifier mon profil
+        <h2 className="text-lg font-bold">Sécurité</h2>
+
+        <p className="ak-muted mt-2 text-sm">Gestion du mot de passe du compte.</p>
+
+        <button
+          onClick={() => setShowPasswordModal(true)}
+          className="mt-5 rounded-xl bg-(--black) px-6 py-3 font-semibold text-(--cream) transition hover:bg-(--brown-dark)"
+        >
+          Modifier le mot de passe
         </button>
       </div>
+
+      <ChangePasswordModal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
     </div>
   );
 };

@@ -98,6 +98,14 @@ export const createTicket = async (data: CreateTicketData) => {
     throw new Error("Client introuvable");
   }
 
+  if (data.appointment) {
+    const linkedAppointment = await Appointment.findById(data.appointment);
+
+    if (linkedAppointment?.status === "paid") {
+      throw new Error("Ce rendez-vous a déjà été encaissé");
+    }
+  }
+
   const items = await buildItems(data.items);
 
   const subtotal = items.reduce((sum, item) => sum + item.finalPrice, 0);
@@ -120,6 +128,12 @@ export const createTicket = async (data: CreateTicketData) => {
     status: "paid",
     createdBy: data.createdBy,
   });
+
+  if (data.appointment) {
+    await Appointment.findByIdAndUpdate(data.appointment, {
+      status: "paid",
+    });
+  }
 
   await Client.findByIdAndUpdate(client._id, {
     $inc: {
@@ -205,6 +219,13 @@ export const cancelTicket = async (id: string, userId: string) => {
   ticket.cancelledAt = new Date();
 
   await ticket.save();
+
+  if (ticket.appointment) {
+    await Appointment.findOneAndUpdate(
+      { _id: ticket.appointment, status: "paid" },
+      { status: "completed" },
+    );
+  }
 
   if (ticket.cashRegister) {
     await recalculateTotals(ticket.cashRegister.toString());

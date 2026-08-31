@@ -15,12 +15,14 @@ import CloseRegisterModal from "../../components/POS/CloseRegisterModal";
 import RegisterStatusBar from "../../components/POS/RegisterStatusBar";
 import Alert from "../../components/ui/Alert";
 import LoadingState from "../../components/ui/LoadingState";
+import ConfirmModal from "../../components/ui/ConfirmModal";
 
 const POS = () => {
   const cashRegister = useCashRegister();
   const pos = usePOS({ onCheckoutSuccess: cashRegister.refresh });
 
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const [confirmNewTicket, setConfirmNewTicket] = useState(false);
 
   if (cashRegister.loading || pos.loading) {
     return <LoadingState label="Chargement de la caisse..." />;
@@ -56,13 +58,10 @@ const POS = () => {
 
         <button
           onClick={() => {
-            if (
-              pos.cart.length === 0 ||
-              window.confirm(
-                "Démarrer une nouvelle vente ? Le ticket en cours sera perdu.",
-              )
-            ) {
+            if (pos.cart.length === 0) {
               pos.newTicket();
+            } else {
+              setConfirmNewTicket(true);
             }
           }}
           className="flex items-center gap-3 rounded-xl bg-(--cream) px-5 py-3 transition hover:bg-(--surface)"
@@ -109,7 +108,10 @@ const POS = () => {
             selectAppointment={pos.selectAppointment}
           />
 
-          <TodayAppointments onSelect={pos.selectAppointment} />
+          <TodayAppointments
+            onSelect={pos.selectAppointment}
+            refreshKey={pos.todayRefreshKey}
+          />
         </div>
 
         <div className="lg:w-[calc(33.333%-16px)]">
@@ -138,6 +140,30 @@ const POS = () => {
           error={cashRegister.error}
         />
       )}
+
+      <ConfirmModal
+        open={pos.showCheckoutConfirm}
+        title="Confirmer l'encaissement"
+        description={`Confirmer l'encaissement de ${pos.total} DA ?`}
+        confirmLabel="Encaisser"
+        danger={false}
+        loading={pos.saving}
+        onConfirm={pos.confirmCheckout}
+        onCancel={pos.cancelCheckout}
+      />
+
+      <ConfirmModal
+        open={confirmNewTicket}
+        title="Démarrer une nouvelle vente ?"
+        description="Le ticket en cours sera perdu."
+        confirmLabel="Nouvelle vente"
+        danger={false}
+        onConfirm={() => {
+          pos.newTicket();
+          setConfirmNewTicket(false);
+        }}
+        onCancel={() => setConfirmNewTicket(false)}
+      />
     </div>
   );
 };
