@@ -158,72 +158,81 @@ a {
    TOOLTIPS AU SURVOL
    (réutilise les aria-label déjà posés
    sur les boutons icône-seule)
+
+   Tout ce bloc est dans @layer utilities pour
+   rester dans la même couche cascade que Tailwind :
+   du CSS hors-couche gagne TOUJOURS sur du CSS en
+   couche, quelle que soit la spécificité — sans ça,
+   notre "position: relative" écrasait le "position:
+   absolute" des boutons Tailwind (icônes mal placées).
 ================================ */
 
-:where(button[aria-label], a[aria-label]) {
-  position: relative;
-}
+@layer utilities {
+  :where(button[aria-label], a[aria-label]) {
+    position: relative;
+  }
 
-:where(button[aria-label], a[aria-label])::before,
-:where(button[aria-label], a[aria-label])::after {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s ease,
-    visibility 0.15s;
-  z-index: 200;
-}
+  :where(button[aria-label], a[aria-label])::before,
+  :where(button[aria-label], a[aria-label])::after {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease,
+      visibility 0.15s;
+    z-index: 200;
+  }
 
-:where(button[aria-label], a[aria-label])::after {
-  content: attr(aria-label);
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
+  :where(button[aria-label], a[aria-label])::after {
+    content: attr(aria-label);
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
 
-  padding: 6px 11px;
-  border-radius: 8px;
-  background: var(--black);
-  color: var(--cream);
-  font-family: var(--body-font);
-  font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-  box-shadow: var(--shadow-sm);
-}
+    padding: 6px 11px;
+    border-radius: 8px;
+    background: var(--black);
+    color: var(--cream);
+    font-family: var(--body-font);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    box-shadow: var(--shadow-sm);
+  }
 
-:where(button[aria-label], a[aria-label])::before {
-  content: "";
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
+  :where(button[aria-label], a[aria-label])::before {
+    content: "";
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
 
-  border: 5px solid transparent;
-  border-top-color: var(--black);
-}
+    border: 5px solid transparent;
+    border-top-color: var(--black);
+  }
 
-@media (hover: hover) and (pointer: fine) {
-  :where(button[aria-label], a[aria-label]):hover::before,
-  :where(button[aria-label], a[aria-label]):hover::after {
+  @media (hover: hover) and (pointer: fine) {
+    :where(button[aria-label], a[aria-label]):hover::before,
+    :where(button[aria-label], a[aria-label]):hover::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  :where(button[aria-label], a[aria-label]):focus-visible::before,
+  :where(button[aria-label], a[aria-label]):focus-visible::after {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(0);
   }
-}
 
-:where(button[aria-label], a[aria-label]):focus-visible::before,
-:where(button[aria-label], a[aria-label]):focus-visible::after {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(0);
-}
-
-:where(button[aria-label], a[aria-label]):disabled::before,
-:where(button[aria-label], a[aria-label]):disabled::after {
-  opacity: 0 !important;
-  visibility: hidden !important;
+  :where(button[aria-label], a[aria-label]):disabled::before,
+  :where(button[aria-label], a[aria-label]):disabled::after {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
 }
