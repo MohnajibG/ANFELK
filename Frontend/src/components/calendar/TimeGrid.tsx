@@ -107,9 +107,7 @@ const TimeGrid = ({
     onReschedule(appointment, slot.column.key, slot.startTime);
   };
 
-  const handleBackgroundClick = (
-    event: React.MouseEvent<HTMLDivElement>,
-  ) => {
+  const handleBackgroundClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!onSelectEmptySlot || readOnly) return;
     if (event.target !== event.currentTarget) return;
 
@@ -121,7 +119,7 @@ const TimeGrid = ({
 
   return (
     <div className="flex w-full">
-      <div className="w-16 flex-shrink-0 pt-9">
+      <div className="w-16 shrink-0 pt-9">
         {hours.map((hour) => (
           <div
             key={hour}
