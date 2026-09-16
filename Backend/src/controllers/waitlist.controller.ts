@@ -74,11 +74,18 @@ export const getWaitlistMatchesController = async (
       });
     }
 
-    const serviceIds = (services as string).split(",").filter(Boolean);
+    if (typeof date !== "string" || typeof services !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "date et services sont obligatoires",
+      });
+    }
+
+    const serviceIds = services.split(",").filter(Boolean);
 
     const matches = await findMatchesForSlot({
-      employeeId: employee as string | undefined,
-      date: new Date(date as string),
+      employeeId: typeof employee === "string" ? employee : undefined,
+      date: new Date(date),
       serviceIds,
     });
 

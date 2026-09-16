@@ -9,6 +9,7 @@ import {
   cancelTicket,
   updateTicketAdmin,
   createTicketFromAppointment,
+  TicketFilter,
 } from "../services/ticket.service";
 
 export const createTicketController = async (
@@ -35,7 +36,21 @@ export const createTicketController = async (
 
 export const getTicketsController = async (req: AuthRequest, res: Response) => {
   try {
-    const tickets = await getTickets(req.query);
+    const { status, client, cashRegister, paymentMethod } = req.query;
+
+    const tickets = await getTickets({
+      status:
+        typeof status === "string"
+          ? (status as TicketFilter["status"])
+          : undefined,
+      client: typeof client === "string" ? client : undefined,
+      cashRegister:
+        typeof cashRegister === "string" ? cashRegister : undefined,
+      paymentMethod:
+        typeof paymentMethod === "string"
+          ? (paymentMethod as TicketFilter["paymentMethod"])
+          : undefined,
+    });
 
     return res.json({
       success: true,

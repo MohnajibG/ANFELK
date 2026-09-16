@@ -38,9 +38,9 @@ export const getExpensesController = async (
     const { from, to, type } = req.query;
 
     const expenses = await getExpenses({
-      from: from as string | undefined,
-      to: to as string | undefined,
-      type: type as string | undefined,
+      from: typeof from === "string" ? from : undefined,
+      to: typeof to === "string" ? to : undefined,
+      type: typeof type === "string" ? type : undefined,
     });
 
     return res.json({

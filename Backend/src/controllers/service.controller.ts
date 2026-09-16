@@ -54,11 +54,11 @@ export const getServicesController = async (
     const { category, isActive, search } = req.query;
 
     const services = await getServices({
-      category: category as string | undefined,
+      category: typeof category === "string" ? category : undefined,
 
       isActive: isActive !== undefined ? isActive === "true" : undefined,
 
-      search: search as string | undefined,
+      search: typeof search === "string" ? search : undefined,
     });
 
     return res.status(200).json({

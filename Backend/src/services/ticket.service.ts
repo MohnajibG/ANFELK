@@ -149,8 +149,27 @@ export const createTicket = async (data: CreateTicketData) => {
   return ticket;
 };
 
-export const getTickets = async (filter: any = {}) => {
-  return Ticket.find(filter)
+export interface TicketFilter {
+  status?: "waiting_payment" | "paid" | "cancelled";
+  client?: string;
+  cashRegister?: string;
+  paymentMethod?: "cash" | "card" | "transfer";
+}
+
+/**
+ * Filtre construit explicitement champ par champ (jamais Ticket.find(req.query)
+ * directement) : sinon un attaquant peut injecter des opérateurs Mongo
+ * (ex: ?client[$ne]=null) via la query string.
+ */
+export const getTickets = async (filter: TicketFilter = {}) => {
+  const query: Record<string, unknown> = {};
+
+  if (filter.status) query.status = filter.status;
+  if (filter.client) query.client = filter.client;
+  if (filter.cashRegister) query.cashRegister = filter.cashRegister;
+  if (filter.paymentMethod) query.paymentMethod = filter.paymentMethod;
+
+  return Ticket.find(query)
 
     .populate("client", "firstName lastName phone")
 

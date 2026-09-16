@@ -58,7 +58,7 @@ export const getAvailabilityController = async (
   try {
     const { employee, date } = req.query;
 
-    if (!employee || !date) {
+    if (typeof employee !== "string" || typeof date !== "string") {
       return res.status(400).json({
         success: false,
 
@@ -66,11 +66,7 @@ export const getAvailabilityController = async (
       });
     }
 
-    const availability = await getAvailability(
-      employee as string,
-
-      new Date(date as string),
-    );
+    const availability = await getAvailability(employee, new Date(date));
 
     res.json({
       success: true,

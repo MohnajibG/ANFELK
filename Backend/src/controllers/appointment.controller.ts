@@ -58,11 +58,14 @@ export const getAppointmentsController = async (
     const { status, employeeId, clientId, dateFrom, dateTo } = req.query;
 
     const filter: AppointmentFilter = {
-      status: status as AppointmentStatus | undefined,
-      employeeId: employeeId as string | undefined,
-      clientId: clientId as string | undefined,
-      dateFrom: dateFrom ? new Date(dateFrom as string) : undefined,
-      dateTo: dateTo ? new Date(dateTo as string) : undefined,
+      status:
+        typeof status === "string"
+          ? (status as AppointmentStatus)
+          : undefined,
+      employeeId: typeof employeeId === "string" ? employeeId : undefined,
+      clientId: typeof clientId === "string" ? clientId : undefined,
+      dateFrom: typeof dateFrom === "string" ? new Date(dateFrom) : undefined,
+      dateTo: typeof dateTo === "string" ? new Date(dateTo) : undefined,
     };
 
     const appointments = await getAppointments(filter);

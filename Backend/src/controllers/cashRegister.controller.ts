@@ -77,10 +77,13 @@ export const getCashRegisterHistoryController = async (
     const { cashier, from, to, status } = req.query;
 
     const history = await getCashRegisterHistory({
-      cashier: cashier as string | undefined,
-      from: from as string | undefined,
-      to: to as string | undefined,
-      status: status as "open" | "closed" | "finalized" | undefined,
+      cashier: typeof cashier === "string" ? cashier : undefined,
+      from: typeof from === "string" ? from : undefined,
+      to: typeof to === "string" ? to : undefined,
+      status:
+        status === "open" || status === "closed" || status === "finalized"
+          ? status
+          : undefined,
     });
 
     return res.json({ success: true, history });
